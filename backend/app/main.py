@@ -6,11 +6,12 @@ import debugpy
 
 from app.api.api_v1.routers.users import users_router
 from app.api.api_v1.routers.auth import auth_router
+from app.api.api_v1.routers.tasks import tasks_router
 from app.core import config
 from app.db.session import SessionLocal
 from app.core.auth import get_current_active_user
 from app.core.celery_app import celery_app
-from app import tasks
+from app import celery_tasks
 
 
 app = FastAPI(
@@ -31,8 +32,8 @@ async def root():
     return {"message": "Hello World"}
 
 
-@app.get("/api/v1/task")
-async def example_task():
+@app.get("/api/v1/background_task")
+async def example_background_task():
     celery_app.send_task("app.tasks.example_task", args=["Hello World"])
 
     return {"message": "success"}
@@ -46,6 +47,12 @@ app.include_router(
     dependencies=[Depends(get_current_active_user)],
 )
 app.include_router(auth_router, prefix="/api", tags=["auth"])
+
+app.include_router(
+    tasks_router,
+    prefix="/api/v1",
+    tags=["tasks"],
+)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--debug":

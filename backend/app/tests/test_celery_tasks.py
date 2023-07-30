@@ -1,4 +1,4 @@
-from app import tasks
+from app import celery_tasks
 
 
 def test_example_task():

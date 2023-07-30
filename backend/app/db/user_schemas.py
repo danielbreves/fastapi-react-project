@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 import typing as t
 
 
@@ -30,6 +31,8 @@ class UserEdit(UserBase):
 
 class User(UserBase):
     id: int
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         orm_mode = True
