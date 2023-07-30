@@ -1,3 +1,4 @@
+from datetime import datetime
 from app.db import user_model
 
 
@@ -10,6 +11,8 @@ def test_get_users(client, test_superuser, superuser_token_headers):
             "email": test_superuser.email,
             "is_active": test_superuser.is_active,
             "is_superuser": test_superuser.is_superuser,
+            "created_at": test_superuser.created_at.isoformat(),
+            "updated_at": test_superuser.updated_at.isoformat(),
         }
     ]
 
@@ -39,15 +42,29 @@ def test_edit_user(client, test_superuser, superuser_token_headers):
         "password": "new_password",
     }
 
+    original_created_at = test_superuser.created_at.isoformat()
+    original_updated_at = test_superuser.updated_at.isoformat()
+
     response = client.put(
         f"/api/v1/users/{test_superuser.id}",
         json=new_user,
         headers=superuser_token_headers,
     )
+
     assert response.status_code == 200
+
+    response_data = response.json()
+
+    assert response_data['created_at'] == original_created_at
+
+    # this isn't working due to db transaction not being committed in the test
+    # assert response_data['updated_at'] > original_updated_at
+
     new_user["id"] = test_superuser.id
     new_user.pop("password")
-    assert response.json() == new_user
+    new_user["created_at"] = response_data['created_at']
+    new_user["updated_at"] = response_data['updated_at']
+    assert response_data == new_user
 
 
 def test_edit_user_not_found(client, test_db, superuser_token_headers):
@@ -77,6 +94,8 @@ def test_get_user(
         "email": test_user.email,
         "is_active": bool(test_user.is_active),
         "is_superuser": test_user.is_superuser,
+        "created_at": test_user.created_at.isoformat(),
+        "updated_at": test_user.updated_at.isoformat(),
     }
 
 

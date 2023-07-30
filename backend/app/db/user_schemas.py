@@ -4,7 +4,6 @@ import typing as t
 
 
 class UserBase(BaseModel):
-    email: str
     is_active: bool = True
     is_superuser: bool = False
     first_name: t.Union[str, None] = None
@@ -16,6 +15,7 @@ class UserOut(UserBase):
 
 
 class UserCreate(UserBase):
+    email: str
     password: str
 
     class Config:
@@ -23,6 +23,7 @@ class UserCreate(UserBase):
 
 
 class UserEdit(UserBase):
+    email: t.Optional[str] = None
     password: t.Optional[str] = None
 
     class Config:
@@ -31,6 +32,7 @@ class UserEdit(UserBase):
 
 class User(UserBase):
     id: int
+    email: str
     created_at: datetime
     updated_at: datetime
 

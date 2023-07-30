@@ -19,6 +19,22 @@
                 }
             ],
             "justMyCode": false
+        },
+        {
+            "name": "Pytest: Remote Attach",
+            "type": "python",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5679
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/backend",
+                    "remoteRoot": "."
+                }
+            ],
+            "justMyCode": false
         }
     ]
 }

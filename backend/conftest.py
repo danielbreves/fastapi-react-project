@@ -9,10 +9,20 @@ from app.core import config, security
 from app.db.session import Base, get_db
 from app.db import user_model
 from app.main import app
+import debugpy
 
 
 def get_test_db_url() -> str:
     return f"{config.SQLALCHEMY_DATABASE_URI}_test"
+
+
+@pytest.fixture
+def enable_debugging(request):
+    # Enable debugging and wait for the debugger to attach
+    debugpy.listen(("0.0.0.0", 5679))
+    print("Waiting for debugger to attach...")
+    debugpy.wait_for_client()
+    print("Debugger attached.")
 
 
 @pytest.fixture

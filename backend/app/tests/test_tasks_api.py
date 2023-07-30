@@ -85,9 +85,6 @@ def test_update_task():
 
     response = client.put(f"/api/v1/tasks/{task_id}", json=updated_data)
 
-    print(
-        f"Response - Status Code: {response.status_code}, Headers: {response.headers}, Content: {response.content}")
-
     assert response.status_code == 200
     assert response.json()["title"] == updated_data["title"]
     assert response.json()["status"] == updated_data["status"]
@@ -111,9 +108,6 @@ def test_delete_task():
 
     # Delete the task
     response = client.delete(f"/api/v1/tasks/{task_id}")
-
-    print(
-        f"Response - Status Code: {response.status_code}, Headers: {response.headers}, Content: {response.content}")
 
     assert response.status_code == 200
     assert response.json()["id"] == task_id

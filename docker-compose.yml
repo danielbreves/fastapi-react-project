@@ -47,6 +47,7 @@ services:
     command: ["python", "app/main.py", "--debug"]
     ports:
       - 5678:5678
+      - 5679:5679 # pytest
     tty: true
     volumes:
       - ./backend:/app/:cached

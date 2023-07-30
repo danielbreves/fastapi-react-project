@@ -8,6 +8,7 @@ Create Date: 2023-07-29 01:08:51.647061-07:00
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy import func
+from typing import Optional
 
 
 # revision identifiers, used by Alembic.
