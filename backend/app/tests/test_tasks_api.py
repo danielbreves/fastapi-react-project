@@ -1,28 +1,6 @@
 # tests/test_tasks_api.py
 
-from fastapi.testclient import TestClient
-from app.main import app
-from app.db.session import SessionLocal
-
-# Override the database dependency to use a test database
-app.dependency_overrides[SessionLocal] = lambda: SessionLocalTest()
-
-
-class SessionLocalTest:
-    def __init__(self):
-        self.session = SessionLocal()
-
-    def __enter__(self):
-        return self.session
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.session.rollback()
-        self.session.close()
-
-
-def test_create_task():
-    client = TestClient(app)
-
+def test_create_task(client):
     task_data = {
         "title": "Test Task",
         "description": "This is a test task.",
@@ -38,9 +16,7 @@ def test_create_task():
     assert response.json()["title"] == task_data["title"]
 
 
-def test_read_task():
-    client = TestClient(app)
-
+def test_read_task(client):
     # Create a test task
     task_data = {
         "title": "Test Task",
@@ -61,9 +37,7 @@ def test_read_task():
     assert response.json()["title"] == task_data["title"]
 
 
-def test_update_task():
-    client = TestClient(app)
-
+def test_update_task(client):
     # Create a test task
     task_data = {
         "title": "Test Task",
@@ -90,9 +64,7 @@ def test_update_task():
     assert response.json()["status"] == updated_data["status"]
 
 
-def test_delete_task():
-    client = TestClient(app)
-
+def test_delete_task(client):
     # Create a test task
     task_data = {
         "title": "Test Task",
