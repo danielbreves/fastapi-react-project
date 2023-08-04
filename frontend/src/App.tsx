@@ -1,6 +1,9 @@
-import React, { FC } from 'react';
-import { Routes } from './Routes';
+import "bootstrap/dist/css/bootstrap.css";
+import "./App.css";
+import TasksTable from "./TasksTable";
 
-const App: FC = () => <Routes />;
+function App() {
+  return <TasksTable />;
+}
 
 export default App;

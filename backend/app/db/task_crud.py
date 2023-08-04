@@ -6,8 +6,12 @@ def get_task(db: Session, task_id: int):
     return db.query(task_model.Task).filter(task_model.Task.id == task_id).first()
 
 
+def get_task_by_title(db: Session, title: str) -> task_schemas.TaskBase:
+    return db.query(task_model.Task).filter(task_model.Task.title == title).first()
+
+
 def get_tasks(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(task_model.Task).offset(skip).limit(limit).all()
+    return db.query(task_model.Task).order_by(task_model.Task.created_at.desc()).offset(skip).limit(limit).all()
 
 
 def create_task(db: Session, task: task_schemas.TaskCreate):

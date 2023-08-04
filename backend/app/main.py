@@ -12,10 +12,23 @@ from app.db.session import SessionLocal
 from app.core.auth import get_current_active_user
 from app.core.celery_app import celery_app
 from app import celery_tasks
+from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI(
     title=config.PROJECT_NAME, docs_url="/api/docs", openapi_url="/api"
+)
+
+origins = [
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
