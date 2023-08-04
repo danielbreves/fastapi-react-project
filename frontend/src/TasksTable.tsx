@@ -1,28 +1,30 @@
 import "bootstrap/dist/css/bootstrap.css";
 import { Table, Button } from "react-bootstrap";
 import { useState, useEffect } from "react";
-import AddNewForm from "./AddNewForm";
+import TaskForm from "./TaskForm";
 import SlideOver from "./SlideOver";
-
-interface Task {
-  id: number;
-  title: string;
-  description: string;
-  date: string;
-  assignee: string;
-  status: string;
-  priority: string;
-}
+import {Task} from "./types/Task";
 
 export default function TasksTable() {
   const [tasksData, setData] = useState<Task[]>([]);
   const [isLoading, setLoading] = useState(true);
-  const [showAddNew, setShowAddNew] = useState(false);
+  const [showTaskForm, setShowTaskForm] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
 
-  function handleAddTask() {
+  function handleSaveTask() {
     fetchTasks();
-    setShowAddNew(false);
+    closeTaskForm();
+  }
+
+  function closeTaskForm() {
+    setShowTaskForm(false);
+    setEditingTaskId(null);
+  }
+
+  function handleUpdateTask(taskId: number) {
+    setEditingTaskId(taskId);
+    setShowTaskForm(true);
   }
 
   function fetchTasks() {
@@ -57,15 +59,22 @@ export default function TasksTable() {
 
   return (
     <>
-      <Button variant="primary" onClick={() => setShowAddNew(true)}>
+      <Button variant="primary" onClick={() => setShowTaskForm(true)}>
         Add new
       </Button>
       <SlideOver
-        show={showAddNew}
-        onHide={() => setShowAddNew(false)}
+        show={showTaskForm}
+        onHide={() => setShowTaskForm(false)}
         title="Add new"
       >
-        <AddNewForm onAddTask={handleAddTask} />
+        <TaskForm
+          onSaveTask={handleSaveTask}
+          initialTask={
+            editingTaskId
+              ? tasksData.find((task) => task.id === editingTaskId)
+              : undefined
+          }
+        />
       </SlideOver>
       {isLoading && <div>Loading...</div>}
       {error && <div>{error.message}</div>}
@@ -78,6 +87,7 @@ export default function TasksTable() {
             <th>Assignee</th>
             <th>Status</th>
             <th>Priority</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -89,6 +99,14 @@ export default function TasksTable() {
               <td>{task.assignee}</td>
               <td>{task.status}</td>
               <td>{task.priority}</td>
+              <td>
+                <Button
+                  variant="primary"
+                  onClick={() => handleUpdateTask(task.id!)}
+                >
+                  Update
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -96,4 +114,3 @@ export default function TasksTable() {
     </>
   );
 }
-

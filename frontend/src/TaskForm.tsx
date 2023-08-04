@@ -1,17 +1,8 @@
-import "bootstrap/dist/css/bootstrap.css";
 import { Form, Button } from "react-bootstrap";
 import { useForm, Controller, set } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-
-interface CreateTask {
-  title: string;
-  description?: string;
-  date?: string;
-  assignee?: string;
-  status?: string;
-  priority?: string;
-}
+import { Task, PartialTask } from "./types/Task";
 
 const schema = yup.object().shape({
   title: yup.string().required("Title is required"),
@@ -22,55 +13,64 @@ const schema = yup.object().shape({
   priority: yup.string(),
 });
 
-interface AddNewFormProps {
-  onAddTask: (newTask: CreateTask) => void;
+interface TaskFormProps {
+  onSaveTask: (task: PartialTask) => void;
+  initialTask?: Task;
 }
 
-export default function AddNewForm({ onAddTask }: AddNewFormProps) {
+function mapEntries<T extends Record<string, any>>(obj: T, from: any, to: any) {
+  return Object.entries(obj).reduce((result, [field, value]) => {
+    result[field as keyof T] = value === from ? to : value;
+    return result;
+  }, {} as T);
+}
+
+export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
+  const isUpdate = !!initialTask;
+  const { created_at, updated_at, ...defaultValues } = initialTask || {};
+
   const {
     handleSubmit,
     control,
     getValues,
     reset,
     formState: { errors, touchedFields },
-  } = useForm<CreateTask>({
+  } = useForm<PartialTask>({
     mode: "onBlur",
-    resolver: yupResolver<CreateTask>(schema),
+    resolver: yupResolver<Omit<PartialTask, "id">>(schema),
+    defaultValues: mapEntries(defaultValues, null, ""),
   });
 
-  function isValid(field: keyof CreateTask) {
+  function isValid(field: keyof PartialTask) {
     return touchedFields[field] && !errors[field] && !!getValues(field);
   }
 
-  function isInvalid(field: keyof CreateTask) {
+  function isInvalid(field: keyof PartialTask) {
     return touchedFields[field] && !!errors[field];
   }
 
-  const onSubmit = handleSubmit(async (newTask: CreateTask) => {
-    const modifiedTask = Object.entries(newTask).reduce(
-      (task, [field, value]) => {
-        if (value !== undefined && value !== "") {
-          task[field as keyof CreateTask] = value;
-        }
-        return task;
-      },
-      {} as CreateTask
-    );
+  const onSubmit = handleSubmit(async (task: PartialTask) => {
+    const apiUrl = "http://localhost:8000/api/v1/tasks";
+
+    const modifiedTask = mapEntries(task, "", null);
 
     try {
-      const response = await fetch("http://localhost:8000/api/v1/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(modifiedTask),
-      });
+      const response = await fetch(
+        isUpdate ? `${apiUrl}/${initialTask.id}` : apiUrl,
+        {
+          method: isUpdate ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(modifiedTask),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to add task");
       }
 
-      onAddTask(modifiedTask);
+      onSaveTask(modifiedTask);
       reset();
     } catch (error) {
       // Handle any error that occurs during the request
@@ -85,7 +85,6 @@ export default function AddNewForm({ onAddTask }: AddNewFormProps) {
         <Controller
           name="title"
           control={control}
-          defaultValue=""
           render={({ field }) => (
             <Form.Control
               {...field}
@@ -104,7 +103,6 @@ export default function AddNewForm({ onAddTask }: AddNewFormProps) {
         <Controller
           name="description"
           control={control}
-          defaultValue=""
           render={({ field }) => (
             <Form.Control
               {...field}
@@ -123,7 +121,6 @@ export default function AddNewForm({ onAddTask }: AddNewFormProps) {
         <Controller
           name="date"
           control={control}
-          defaultValue=""
           render={({ field }) => (
             <Form.Control
               {...field}
@@ -142,7 +139,6 @@ export default function AddNewForm({ onAddTask }: AddNewFormProps) {
         <Controller
           name="assignee"
           control={control}
-          defaultValue=""
           render={({ field }) => (
             <Form.Control
               {...field}
@@ -161,7 +157,6 @@ export default function AddNewForm({ onAddTask }: AddNewFormProps) {
         <Controller
           name="status"
           control={control}
-          defaultValue=""
           render={({ field }) => (
             <Form.Control
               {...field}
@@ -180,7 +175,6 @@ export default function AddNewForm({ onAddTask }: AddNewFormProps) {
         <Controller
           name="priority"
           control={control}
-          defaultValue=""
           render={({ field }) => (
             <Form.Control
               {...field}
@@ -195,7 +189,7 @@ export default function AddNewForm({ onAddTask }: AddNewFormProps) {
         </Form.Control.Feedback>
       </Form.Group>
       <Button className="submit-button" variant="primary" type="submit">
-        Add Task
+        Save Task
       </Button>
     </Form>
   );
