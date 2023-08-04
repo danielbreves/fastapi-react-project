@@ -1,16 +1,20 @@
 import "bootstrap/dist/css/bootstrap.css";
-import { Table, Button } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 import { useState, useEffect } from "react";
 import TaskForm from "./TaskForm";
-import SlideOver from "./SlideOver";
-import {Task} from "./types/Task";
+import SlideOver from "../shared/SlideOver";
+import { Task } from "../types/Task";
+import ConfirmDeleteModal from "../shared/ConfirmDelete";
+import TasksTable from "./TasksTable";
 
-export default function TasksTable() {
-  const [tasksData, setData] = useState<Task[]>([]);
+export default function ManageTasks() {
+  const [tasks, setData] = useState<Task[]>([]);
   const [isLoading, setLoading] = useState(true);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [taskToDeleteId, setTaskToDeleteId] = useState<number | null>(null);
 
   function handleSaveTask() {
     fetchTasks();
@@ -25,6 +29,39 @@ export default function TasksTable() {
   function handleUpdateTask(taskId: number) {
     setEditingTaskId(taskId);
     setShowTaskForm(true);
+  }
+
+  function handleDeleteTask(taskId: number) {
+    setTaskToDeleteId(taskId);
+    setShowDeleteModal(true);
+  }
+
+  function resetDeleteTask() {
+    setTaskToDeleteId(null);
+    setShowDeleteModal(false);
+  }
+
+  async function deleteTask() {
+    if (!taskToDeleteId) {
+      return;
+    }
+
+    resetDeleteTask();
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/v1/tasks/${taskToDeleteId}`,
+        { method: "DELETE" }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete task");
+      }
+
+      fetchTasks();
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
   }
 
   function fetchTasks() {
@@ -64,53 +101,30 @@ export default function TasksTable() {
       </Button>
       <SlideOver
         show={showTaskForm}
-        onHide={() => setShowTaskForm(false)}
+        onHide={closeTaskForm}
         title="Add new"
       >
         <TaskForm
           onSaveTask={handleSaveTask}
           initialTask={
             editingTaskId
-              ? tasksData.find((task) => task.id === editingTaskId)
+              ? tasks.find((task) => task.id === editingTaskId)
               : undefined
           }
         />
       </SlideOver>
       {isLoading && <div>Loading...</div>}
       {error && <div>{error.message}</div>}
-      <Table>
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Date</th>
-            <th>Assignee</th>
-            <th>Status</th>
-            <th>Priority</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tasksData.map((task) => (
-            <tr key={task.id}>
-              <td>{task.title}</td>
-              <td>{task.description}</td>
-              <td>{task.date}</td>
-              <td>{task.assignee}</td>
-              <td>{task.status}</td>
-              <td>{task.priority}</td>
-              <td>
-                <Button
-                  variant="primary"
-                  onClick={() => handleUpdateTask(task.id!)}
-                >
-                  Update
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+      <TasksTable
+        tasks={tasks}
+        onUpdateTask={handleUpdateTask}
+        onDeleteTask={handleDeleteTask}
+      />
+      <ConfirmDeleteModal
+        showDeleteModal={showDeleteModal}
+        handleDelete={deleteTask}
+        handleCancel={resetDeleteTask}
+      />
     </>
   );
 }

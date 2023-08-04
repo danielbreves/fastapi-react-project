@@ -2,7 +2,7 @@ import { Form, Button } from "react-bootstrap";
 import { useForm, Controller, set } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { Task, PartialTask } from "./types/Task";
+import { Task, PartialTask } from "../types/Task";
 
 const schema = yup.object().shape({
   title: yup.string().required("Title is required"),
@@ -38,7 +38,16 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
   } = useForm<PartialTask>({
     mode: "onBlur",
     resolver: yupResolver<Omit<PartialTask, "id">>(schema),
-    defaultValues: mapEntries(defaultValues, null, ""),
+    defaultValues: isUpdate
+      ? mapEntries(defaultValues, null, "")
+      : {
+          title: "",
+          description: "",
+          date: "",
+          assignee: "",
+          status: "",
+          priority: "",
+        },
   });
 
   function isValid(field: keyof PartialTask) {
@@ -67,14 +76,13 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to add task");
+        throw new Error("Failed to save task");
       }
 
       onSaveTask(modifiedTask);
       reset();
     } catch (error) {
-      // Handle any error that occurs during the request
-      console.error("Error adding task:", error);
+      console.error("Error saving task:", error);
     }
   });
 
@@ -188,7 +196,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
           {errors.priority?.message}
         </Form.Control.Feedback>
       </Form.Group>
-      <Button className="submit-button" variant="primary" type="submit">
+      <Button style={{ marginTop: '10px' }} variant="primary" type="submit">
         Save Task
       </Button>
     </Form>

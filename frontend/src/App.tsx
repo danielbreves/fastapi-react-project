@@ -1,9 +1,9 @@
 import "bootstrap/dist/css/bootstrap.css";
 import "./App.css";
-import TasksTable from "./TasksTable";
+import ManageTasks from "./tasks/ManageTasks";
 
 function App() {
-  return <TasksTable />;
+  return <ManageTasks />;
 }
 
 export default App;
