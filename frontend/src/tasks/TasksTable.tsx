@@ -40,10 +40,15 @@ export default function TasksTable({
                 <Button
                   variant="light"
                   onClick={() => onUpdateTask(task.id!)}
+                  data-testid={`update-button-${task.id}`}
                 >
                   <FaPencil />
                 </Button>
-                <Button variant="light" onClick={() => onDeleteTask(task.id!)}>
+                <Button
+                  variant="light"
+                  onClick={() => onDeleteTask(task.id!)}
+                  data-testid={`delete-button-${task.id}`}
+                >
                   <FaTrashCan />
                 </Button>
               </div>

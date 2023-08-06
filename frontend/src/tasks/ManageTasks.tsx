@@ -96,7 +96,7 @@ export default function ManageTasks() {
       <Button variant="primary" onClick={() => setShowTaskForm(true)}>
         Add new
       </Button>
-      <SlideOver show={showTaskForm} onHide={closeTaskForm} title="Add new">
+      <SlideOver show={showTaskForm} onHide={closeTaskForm} title={editingTaskId ? 'Update task' : 'Add new task'}>
         <TaskForm
           onSaveTask={handleSaveTask}
           initialTask={

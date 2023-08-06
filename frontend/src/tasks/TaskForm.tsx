@@ -1,5 +1,5 @@
 import { Form, Button } from "react-bootstrap";
-import { useForm, Controller, set } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Task, PartialTask } from "../types/Task";
@@ -53,7 +53,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
     return touchedFields[field] && !!errors[field];
   }
 
-  const onSubmit = handleSubmit(async (task: PartialTask) => {
+  async function doSubmit(task: PartialTask) {
     const modifiedTask = mapEntries(task, "", null);
 
     try {
@@ -70,11 +70,11 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
     } catch (error) {
       console.error("Error saving task:", error);
     }
-  });
+  }
 
   return (
-    <Form onSubmit={onSubmit}>
-      <Form.Group>
+    <Form onSubmit={handleSubmit(doSubmit)}>
+      <Form.Group controlId="task-title">
         <Form.Label>Title*</Form.Label>
         <Controller
           name="title"
@@ -92,7 +92,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
           {errors.title?.message}
         </Form.Control.Feedback>
       </Form.Group>
-      <Form.Group>
+      <Form.Group controlId="task-description">
         <Form.Label>Description</Form.Label>
         <Controller
           name="description"
@@ -110,7 +110,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
           {errors.description?.message}
         </Form.Control.Feedback>
       </Form.Group>
-      <Form.Group>
+      <Form.Group controlId="task-date">
         <Form.Label>Date</Form.Label>
         <Controller
           name="date"
@@ -128,7 +128,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
           {errors.date?.message}
         </Form.Control.Feedback>
       </Form.Group>
-      <Form.Group>
+      <Form.Group controlId="task-assignee">
         <Form.Label>Assignee</Form.Label>
         <Controller
           name="assignee"
@@ -146,7 +146,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
           {errors.assignee?.message}
         </Form.Control.Feedback>
       </Form.Group>
-      <Form.Group>
+      <Form.Group controlId="task-status">
         <Form.Label>Status</Form.Label>
         <Controller
           name="status"
@@ -164,7 +164,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
           {errors.status?.message}
         </Form.Control.Feedback>
       </Form.Group>
-      <Form.Group>
+      <Form.Group controlId="task-priority">
         <Form.Label>Priority</Form.Label>
         <Controller
           name="priority"
