@@ -59,7 +59,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
   }
 
   const onSubmit = handleSubmit(async (task: PartialTask) => {
-    const apiUrl = "http://localhost:8000/api/v1/tasks";
+    const apiUrl = `${process.env.REACT_APP_BASE_API_URL}/tasks`;
 
     const modifiedTask = mapEntries(task, "", null);
 

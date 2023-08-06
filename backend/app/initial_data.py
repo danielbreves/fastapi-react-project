@@ -6,6 +6,7 @@ from app.db.task_crud import create_task, get_task_by_title
 from app.db.task_schemas import TaskCreate
 from app.db.session import SessionLocal
 from datetime import date
+from app.core import config
 
 tasks = [
     TaskCreate(
@@ -54,16 +55,17 @@ tasks = [
 def init() -> None:
     db = SessionLocal()
 
-    admin_email = ""
+    admin_email = config.TEST_USERNAME
+    admin_password = config.TEST_PASSWORD
     user = get_user_by_email(db, admin_email)
 
     if not user:
-        print("Creating superuser")
+        print("Creating test superuser")
         create_user(
             db,
             UserCreate(
-                email="",
-                password="",
+                email=admin_email,
+                password=admin_password,
                 is_active=True,
                 is_superuser=True,
             ),

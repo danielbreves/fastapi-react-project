@@ -50,7 +50,7 @@ export default function ManageTasks() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/v1/tasks/${taskToDeleteId}`,
+        `${process.env.REACT_APP_BASE_API_URL}/tasks/${taskToDeleteId}`,
         { method: "DELETE" }
       );
 
@@ -70,7 +70,7 @@ export default function ManageTasks() {
     (async () => {
       setLoading(true);
       try {
-        const response = await fetch("http://localhost:8000/api/v1/tasks", {
+        const response = await fetch(`${process.env.REACT_APP_BASE_API_URL}/tasks`, {
           signal: controller.signal,
         });
         if (!response.ok) {
