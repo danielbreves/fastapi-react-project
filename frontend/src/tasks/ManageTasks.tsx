@@ -6,6 +6,7 @@ import SlideOver from "../shared/SlideOver";
 import { Task } from "../types/Task";
 import ConfirmDeleteModal from "../shared/ConfirmDelete";
 import TasksTable from "./TasksTable";
+import { deleteTask, getTasks } from "./tasks.api";
 
 export default function ManageTasks() {
   const [tasks, setData] = useState<Task[]>([]);
@@ -41,7 +42,7 @@ export default function ManageTasks() {
     setShowDeleteModal(false);
   }
 
-  async function deleteTask() {
+  async function doDeleteTask() {
     if (!taskToDeleteId) {
       return;
     }
@@ -49,10 +50,7 @@ export default function ManageTasks() {
     resetDeleteTask();
 
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BASE_API_URL}/tasks/${taskToDeleteId}`,
-        { method: "DELETE" }
-      );
+      const response = await deleteTask(taskToDeleteId);
 
       if (!response.ok) {
         throw new Error("Failed to delete task");
@@ -70,9 +68,8 @@ export default function ManageTasks() {
     (async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${process.env.REACT_APP_BASE_API_URL}/tasks`, {
-          signal: controller.signal,
-        });
+        const response = await getTasks(controller.signal);
+
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
@@ -99,11 +96,7 @@ export default function ManageTasks() {
       <Button variant="primary" onClick={() => setShowTaskForm(true)}>
         Add new
       </Button>
-      <SlideOver
-        show={showTaskForm}
-        onHide={closeTaskForm}
-        title="Add new"
-      >
+      <SlideOver show={showTaskForm} onHide={closeTaskForm} title="Add new">
         <TaskForm
           onSaveTask={handleSaveTask}
           initialTask={
@@ -122,7 +115,7 @@ export default function ManageTasks() {
       />
       <ConfirmDeleteModal
         showDeleteModal={showDeleteModal}
-        handleDelete={deleteTask}
+        handleDelete={doDeleteTask}
         handleCancel={resetDeleteTask}
       />
     </>

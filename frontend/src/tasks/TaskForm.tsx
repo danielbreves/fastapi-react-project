@@ -3,6 +3,8 @@ import { useForm, Controller, set } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Task, PartialTask } from "../types/Task";
+import { mapEntries } from "../utils/utils";
+import { createTask, updateTask } from "./tasks.api";
 
 const schema = yup.object().shape({
   title: yup.string().required("Title is required"),
@@ -16,13 +18,6 @@ const schema = yup.object().shape({
 interface TaskFormProps {
   onSaveTask: (task: PartialTask) => void;
   initialTask?: Task;
-}
-
-function mapEntries<T extends Record<string, any>>(obj: T, from: any, to: any) {
-  return Object.entries(obj).reduce((result, [field, value]) => {
-    result[field as keyof T] = value === from ? to : value;
-    return result;
-  }, {} as T);
 }
 
 export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
@@ -59,21 +54,12 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
   }
 
   const onSubmit = handleSubmit(async (task: PartialTask) => {
-    const apiUrl = `${process.env.REACT_APP_BASE_API_URL}/tasks`;
-
     const modifiedTask = mapEntries(task, "", null);
 
     try {
-      const response = await fetch(
-        isUpdate ? `${apiUrl}/${initialTask.id}` : apiUrl,
-        {
-          method: isUpdate ? "PUT" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(modifiedTask),
-        }
-      );
+      const response = await (isUpdate
+        ? updateTask(initialTask.id, modifiedTask)
+        : createTask(modifiedTask));
 
       if (!response.ok) {
         throw new Error("Failed to save task");
@@ -89,7 +75,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
   return (
     <Form onSubmit={onSubmit}>
       <Form.Group>
-        <Form.Label>Title:</Form.Label>
+        <Form.Label>Title*</Form.Label>
         <Controller
           name="title"
           control={control}
@@ -107,7 +93,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
         </Form.Control.Feedback>
       </Form.Group>
       <Form.Group>
-        <Form.Label>Description:</Form.Label>
+        <Form.Label>Description</Form.Label>
         <Controller
           name="description"
           control={control}
@@ -125,7 +111,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
         </Form.Control.Feedback>
       </Form.Group>
       <Form.Group>
-        <Form.Label>Date:</Form.Label>
+        <Form.Label>Date</Form.Label>
         <Controller
           name="date"
           control={control}
@@ -143,7 +129,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
         </Form.Control.Feedback>
       </Form.Group>
       <Form.Group>
-        <Form.Label>Assignee:</Form.Label>
+        <Form.Label>Assignee</Form.Label>
         <Controller
           name="assignee"
           control={control}
@@ -161,7 +147,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
         </Form.Control.Feedback>
       </Form.Group>
       <Form.Group>
-        <Form.Label>Status:</Form.Label>
+        <Form.Label>Status</Form.Label>
         <Controller
           name="status"
           control={control}
@@ -179,7 +165,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
         </Form.Control.Feedback>
       </Form.Group>
       <Form.Group>
-        <Form.Label>Priority:</Form.Label>
+        <Form.Label>Priority</Form.Label>
         <Controller
           name="priority"
           control={control}
@@ -196,7 +182,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
           {errors.priority?.message}
         </Form.Control.Feedback>
       </Form.Group>
-      <Button style={{ marginTop: '10px' }} variant="primary" type="submit">
+      <Button style={{ marginTop: "10px" }} variant="primary" type="submit">
         Save Task
       </Button>
     </Form>
