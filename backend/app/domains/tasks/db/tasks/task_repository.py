@@ -1,4 +1,4 @@
-from app.domains.tasks.db import task_dtos
+from app.domains.tasks.db.tasks import task_dtos
 from sqlalchemy.orm import Session
 from . import task_entity
 

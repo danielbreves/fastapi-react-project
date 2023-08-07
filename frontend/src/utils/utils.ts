@@ -8,3 +8,11 @@ export function mapEntries<T extends Record<string, any>>(
     return result;
   }, {} as T);
 }
+
+export function formatDate(date: Date) {
+  return new Intl.DateTimeFormat('en-AU', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit'
+  }).format(new Date(date));
+}

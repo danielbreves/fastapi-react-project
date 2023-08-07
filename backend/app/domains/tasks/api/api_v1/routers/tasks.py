@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.domains.tasks.db import task_repository, task_dtos
+from app.domains.tasks.db.tasks import task_repository, task_dtos
 
 tasks_router = r = APIRouter()
 

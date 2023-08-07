@@ -3,9 +3,9 @@ import datetime
 from typing import Optional
 
 
-class TaskBase(BaseModel):
+class ProjectBase(BaseModel):
     description: Optional[str] = None
-    date: Optional[datetime.date] = None
+    due_date: Optional[datetime.date] = None
     assignee: Optional[str] = None
     status: Optional[str] = None
     priority: Optional[str] = None
@@ -14,15 +14,15 @@ class TaskBase(BaseModel):
         orm_mode = True
 
 
-class TaskCreate(TaskBase):
+class ProjectCreate(ProjectBase):
     title: str
 
 
-class TaskUpdate(TaskBase):
+class ProjectUpdate(ProjectBase):
     title: Optional[str] = None
 
 
-class Task(TaskBase):
+class Project(ProjectBase):
     id: int
     title: str
     created_at: datetime.datetime

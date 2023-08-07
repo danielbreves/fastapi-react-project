@@ -12,7 +12,7 @@ import LoadingSpinner from "../shared/LoadingSpinner";
 const schema = yup.object().shape({
   title: yup.string().required("Title is required"),
   description: yup.string(),
-  date: yup.string(),
+  due_date: yup.string(),
   assignee: yup.string(),
   status: yup.string(),
   priority: yup.string(),
@@ -43,7 +43,7 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
       : {
           title: "",
           description: "",
-          date: "",
+          due_date: "",
           assignee: "",
           status: "",
           priority: "",
@@ -128,21 +128,21 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
           </Form.Control.Feedback>
         </Form.Group>
         <Form.Group controlId="task-date">
-          <Form.Label>Date</Form.Label>
+          <Form.Label>Due Date</Form.Label>
           <Controller
-            name="date"
+            name="due_date"
             control={control}
             render={({ field }) => (
               <Form.Control
                 {...field}
                 type="date"
-                isValid={isValid("date")}
-                isInvalid={isInvalid("date")}
+                isValid={isValid("due_date")}
+                isInvalid={isInvalid("due_date")}
               />
             )}
           />
           <Form.Control.Feedback type="invalid">
-            {errors.date?.message}
+            {errors.due_date?.message}
           </Form.Control.Feedback>
         </Form.Group>
         <Form.Group controlId="task-assignee">

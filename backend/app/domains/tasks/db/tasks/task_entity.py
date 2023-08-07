@@ -9,7 +9,7 @@ class Task(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    date = Column(Date, nullable=True)
+    due_date = Column(Date, nullable=True)
     assignee = Column(String(100), nullable=True)
     status = Column(String(20), nullable=True)
     priority = Column(String(20), nullable=True)

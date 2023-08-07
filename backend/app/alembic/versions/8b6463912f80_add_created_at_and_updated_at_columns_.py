@@ -7,8 +7,6 @@ Create Date: 2023-07-29 01:18:59.202554-07:00
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-from sqlalchemy import func
 
 # revision identifiers, used by Alembic.
 revision = '8b6463912f80'
@@ -19,9 +17,9 @@ depends_on = None
 
 def upgrade():
     op.add_column('user', sa.Column('created_at', sa.DateTime(),
-                  server_default=func.now(), nullable=False))
+                  server_default=sa.func.now(), nullable=False))
     op.add_column('user', sa.Column('updated_at', sa.DateTime(
-    ), server_default=func.now(), onupdate=func.now(), nullable=False))
+    ), server_default=sa.func.now(), onupdate=sa.func.now(), nullable=False))
 
 
 def downgrade():
