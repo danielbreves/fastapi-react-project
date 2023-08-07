@@ -5,6 +5,10 @@ import { Task, Priority, Status } from "../types/Task";
 
 jest.mock("./tasks.api");
 
+function newUTCDatetime() {
+  return new Date().toISOString().replace("Z", "");
+}
+
 const testData: Task[] = [
   {
     id: 1,
@@ -14,8 +18,8 @@ const testData: Task[] = [
     assignee: null,
     status: Status.IN_PROGRESS,
     priority: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: newUTCDatetime(),
+    updated_at: newUTCDatetime(),
   },
   {
     id: 2,
@@ -25,8 +29,8 @@ const testData: Task[] = [
     assignee: null,
     status: null,
     priority: Priority.LOW,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: newUTCDatetime(),
+    updated_at: newUTCDatetime(),
   },
 ];
 
@@ -122,7 +126,7 @@ describe("ManageTasks Component", () => {
     const updatedTask = {
       ...testData[0],
       ...dataToUpdate,
-      updated_at: new Date().toISOString(),
+      updated_at: newUTCDatetime(),
     };
 
     mockedUpdateTask.mockResolvedValueOnce({
