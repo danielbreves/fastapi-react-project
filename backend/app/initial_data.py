@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from app.db.user_crud import create_user, get_user_by_email
-from app.db.user_schemas import UserCreate
-from app.db.task_crud import create_task, get_task_by_title
-from app.db.task_schemas import TaskCreate
+from app.domains.users.db.user_repository import create_user, get_user_by_email
+from app.domains.users.db.user_dtos import UserCreate
+from app.domains.tasks.db.task_repository import create_task, get_task_by_title
+from app.domains.tasks.db.task_dtos import TaskCreate
 from app.db.session import SessionLocal
 from datetime import date
 from app.core import config

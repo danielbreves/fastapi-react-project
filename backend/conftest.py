@@ -7,7 +7,7 @@ import typing as t
 
 from app.core import config, security
 from app.db.session import Base, get_db
-from app.db import user_model
+from app.domains.users.db import user_entity
 from app.main import app
 import debugpy
 
@@ -110,12 +110,12 @@ def get_password_hash() -> str:
 
 
 @pytest.fixture
-def test_user(test_db) -> user_model.User:
+def test_user(test_db) -> user_entity.User:
     """
     Make a test user in the database
     """
 
-    user = user_model.User(
+    user = user_entity.User(
         email="fake@email.com",
         hashed_password=get_password_hash(),
         is_active=True,
@@ -126,12 +126,12 @@ def test_user(test_db) -> user_model.User:
 
 
 @pytest.fixture
-def test_superuser(test_db) -> user_model.User:
+def test_superuser(test_db) -> user_entity.User:
     """
     Superuser for testing
     """
 
-    user = user_model.User(
+    user = user_entity.User(
         email="fakeadmin@email.com",
         hashed_password=get_password_hash(),
         is_superuser=True,

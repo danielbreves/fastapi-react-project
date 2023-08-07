@@ -1,12 +1,12 @@
 from fastapi.middleware.cors import CORSMiddleware
 from app import celery_tasks
 from app.core.celery_app import celery_app
-from app.core.auth import get_current_active_user
+from app.domains.auth.auth import get_current_active_user
 from app.db.session import SessionLocal
 from app.core import config
-from app.api.api_v1.routers.tasks import tasks_router
-from app.api.api_v1.routers.auth import auth_router
-from app.api.api_v1.routers.users import users_router
+from app.domains.tasks.api.api_v1.routers.tasks import tasks_router
+from app.domains.auth.api.api_v1.routers.auth import auth_router
+from app.domains.users.api.api_v1.routers.users import users_router
 from fastapi import FastAPI, Depends
 from starlette.requests import Request
 import uvicorn

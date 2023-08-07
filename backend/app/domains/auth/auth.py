@@ -2,8 +2,9 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from jwt import PyJWTError
 
-from app.db import user_model, user_schemas, session
-from app.db.user_crud import get_user_by_email, create_user
+from app.db import session
+from app.domains.users.db import user_entity, user_dtos
+from app.domains.users.db.user_repository import get_user_by_email, create_user
 from app.core import security
 
 
@@ -23,7 +24,7 @@ async def get_current_user(
         if email is None:
             raise credentials_exception
         permissions: str = payload.get("permissions")
-        token_data = user_schemas.TokenData(
+        token_data = user_dtos.TokenData(
             email=email, permissions=permissions)
     except PyJWTError:
         raise credentials_exception
@@ -34,7 +35,7 @@ async def get_current_user(
 
 
 async def get_current_active_user(
-    current_user: user_model.User = Depends(get_current_user),
+    current_user: user_entity.User = Depends(get_current_user),
 ):
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
@@ -42,8 +43,8 @@ async def get_current_active_user(
 
 
 async def get_current_active_superuser(
-    current_user: user_model.User = Depends(get_current_user),
-) -> user_model.User:
+    current_user: user_entity.User = Depends(get_current_user),
+) -> user_entity.User:
     if not current_user.is_superuser:
         raise HTTPException(
             status_code=403, detail="The user doesn't have enough privileges"
@@ -66,7 +67,7 @@ def sign_up_new_user(db, email: str, password: str):
         return False  # User already exists
     new_user = create_user(
         db,
-        user_schemas.UserCreate(
+        user_dtos.UserCreate(
             email=email,
             password=password,
             is_active=True,

@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from app.db.session import get_db
 from app.core import security
-from app.core.auth import authenticate_user, sign_up_new_user
+from app.domains.auth.auth import authenticate_user, sign_up_new_user
 
 auth_router = r = APIRouter()
 

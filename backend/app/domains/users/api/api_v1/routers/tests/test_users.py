@@ -1,4 +1,4 @@
-from app.db import user_model
+from app.domains.users.db import user_entity
 
 
 def test_get_users(client, test_superuser, superuser_token_headers):
@@ -21,7 +21,7 @@ def test_delete_user(client, test_superuser, test_db, superuser_token_headers):
         f"/api/v1/users/{test_superuser.id}", headers=superuser_token_headers
     )
     assert response.status_code == 200
-    assert test_db.query(user_model.User).all() == []
+    assert test_db.query(user_entity.User).all() == []
 
 
 def test_delete_user_not_found(client, superuser_token_headers):

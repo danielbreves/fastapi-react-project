@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, Date, DateTime, func
 
-from .session import Base
+from app.db.session import Base
 
 
 class Task(Base):
