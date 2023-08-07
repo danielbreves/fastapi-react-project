@@ -7,15 +7,17 @@ import { Task } from "../types/Task";
 import ConfirmDeleteModal from "../shared/ConfirmDelete";
 import TasksTable from "./TasksTable";
 import { deleteTask, getTasks } from "./tasks.api";
+import ErrorToast from "../shared/Toast";
+import LoadingSpinner from "../shared/LoadingSpinner";
 
 export default function ManageTasks() {
   const [tasks, setData] = useState<Task[]>([]);
   const [isLoading, setLoading] = useState(true);
   const [showTaskForm, setShowTaskForm] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [taskToDeleteId, setTaskToDeleteId] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   function handleSaveTask() {
     fetchTasks();
@@ -47,6 +49,7 @@ export default function ManageTasks() {
       return;
     }
 
+    setLoading(true);
     resetDeleteTask();
 
     try {
@@ -58,7 +61,13 @@ export default function ManageTasks() {
 
       fetchTasks();
     } catch (error) {
-      console.error("Error deleting task:", error);
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        console.error("Error deleting task:", error);
+      }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -73,15 +82,14 @@ export default function ManageTasks() {
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
-        setError(null);
         setData(await response.json());
-        setLoading(false);
       } catch (error) {
         if (error instanceof Error) {
-          setError(error);
+          setErrorMessage(error.message);
         } else {
-          console.log(error);
+          console.error("Error fetching tasks:", error);
         }
+      } finally {
         setLoading(false);
       }
     })();
@@ -96,7 +104,11 @@ export default function ManageTasks() {
       <Button variant="primary" onClick={() => setShowTaskForm(true)}>
         Add new
       </Button>
-      <SlideOver show={showTaskForm} onHide={closeTaskForm} title={editingTaskId ? 'Update task' : 'Add new task'}>
+      <SlideOver
+        show={showTaskForm}
+        onHide={closeTaskForm}
+        title={editingTaskId ? "Update task" : "Add new task"}
+      >
         <TaskForm
           onSaveTask={handleSaveTask}
           initialTask={
@@ -106,8 +118,12 @@ export default function ManageTasks() {
           }
         />
       </SlideOver>
-      {isLoading && <div>Loading...</div>}
-      {error && <div>{error.message}</div>}
+      {isLoading && <LoadingSpinner />}
+      <ErrorToast
+        position="top-end"
+        message={errorMessage}
+        handleClose={() => setErrorMessage("")}
+      />
       <TasksTable
         tasks={tasks}
         onUpdateTask={handleUpdateTask}
