@@ -19,9 +19,7 @@ app = FastAPI(
     title=config.PROJECT_NAME, docs_url="/api/docs", openapi_url="/api"
 )
 
-origins = [
-    "http://localhost:3000",
-]
+origins = config.CORS_ORIGINS.split(',')
 
 app.add_middleware(
     CORSMiddleware,
