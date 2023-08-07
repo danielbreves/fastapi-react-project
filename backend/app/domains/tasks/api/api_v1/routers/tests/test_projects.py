@@ -1,15 +1,16 @@
-# tests/test_projects_api.py
+from app.domains.tasks.db.projects.project_dtos import Status, Priority
+
+project_data = {
+    "title": "Test Project",
+    "description": "This is a test project.",
+    "date": "2023-07-31",
+    "assignee": "John Doe",
+    "status": str(Status.IN_PROGRESS),
+    "priority": str(Priority.HIGH),
+}
+
 
 def test_create_project(client):
-    project_data = {
-        "title": "Test Project",
-        "description": "This is a test project.",
-        "date": "2023-07-31",
-        "assignee": "John Doe",
-        "status": "Pending",
-        "priority": "High",
-    }
-
     response = client.post("/api/v1/projects", json=project_data)
 
     assert response.status_code == 201
@@ -17,16 +18,6 @@ def test_create_project(client):
 
 
 def test_read_project(client):
-    # Create a test project
-    project_data = {
-        "title": "Test Project",
-        "description": "This is a test project.",
-        "date": "2023-07-31",
-        "assignee": "John Doe",
-        "status": "Pending",
-        "priority": "High",
-    }
-
     response = client.post("/api/v1/projects", json=project_data)
     project_id = response.json()["id"]
 
@@ -38,23 +29,13 @@ def test_read_project(client):
 
 
 def test_update_project(client):
-    # Create a test project
-    project_data = {
-        "title": "Test Project",
-        "description": "This is a test project.",
-        "date": "2023-07-31",
-        "assignee": "John Doe",
-        "status": "Pending",
-        "priority": "High",
-    }
-
     response = client.post("/api/v1/projects", json=project_data)
     project_id = response.json()["id"]
 
     # Update the project
     updated_data = {
         "title": "Updated Project Title",
-        "status": "In Progress",
+        "status": str(Status.DONE),
     }
 
     response = client.put(f"/api/v1/projects/{project_id}", json=updated_data)
@@ -65,16 +46,6 @@ def test_update_project(client):
 
 
 def test_delete_project(client):
-    # Create a test project
-    project_data = {
-        "title": "Test Project",
-        "description": "This is a test project.",
-        "date": "2023-07-31",
-        "assignee": "John Doe",
-        "status": "Pending",
-        "priority": "High",
-    }
-
     response = client.post("/api/v1/projects", json=project_data)
     project_id = response.json()["id"]
 

@@ -1,15 +1,16 @@
-# tests/test_tasks_api.py
+from app.domains.tasks.db.tasks.task_dtos import Status, Priority
+
+task_data = {
+    "title": "Test Task",
+    "description": "This is a test task.",
+    "date": "2023-07-31",
+    "assignee": "John Doe",
+    "status": str(Status.IN_PROGRESS),
+    "priority": str(Priority.HIGH),
+}
+
 
 def test_create_task(client):
-    task_data = {
-        "title": "Test Task",
-        "description": "This is a test task.",
-        "date": "2023-07-31",
-        "assignee": "John Doe",
-        "status": "Pending",
-        "priority": "High",
-    }
-
     response = client.post("/api/v1/tasks", json=task_data)
 
     assert response.status_code == 201
@@ -17,16 +18,6 @@ def test_create_task(client):
 
 
 def test_read_task(client):
-    # Create a test task
-    task_data = {
-        "title": "Test Task",
-        "description": "This is a test task.",
-        "date": "2023-07-31",
-        "assignee": "John Doe",
-        "status": "Pending",
-        "priority": "High",
-    }
-
     response = client.post("/api/v1/tasks", json=task_data)
     task_id = response.json()["id"]
 
@@ -38,23 +29,13 @@ def test_read_task(client):
 
 
 def test_update_task(client):
-    # Create a test task
-    task_data = {
-        "title": "Test Task",
-        "description": "This is a test task.",
-        "date": "2023-07-31",
-        "assignee": "John Doe",
-        "status": "Pending",
-        "priority": "High",
-    }
-
     response = client.post("/api/v1/tasks", json=task_data)
     task_id = response.json()["id"]
 
     # Update the task
     updated_data = {
         "title": "Updated Task Title",
-        "status": "In Progress",
+        "status": str(Status.DONE),
     }
 
     response = client.put(f"/api/v1/tasks/{task_id}", json=updated_data)
@@ -65,16 +46,6 @@ def test_update_task(client):
 
 
 def test_delete_task(client):
-    # Create a test task
-    task_data = {
-        "title": "Test Task",
-        "description": "This is a test task.",
-        "date": "2023-07-31",
-        "assignee": "John Doe",
-        "status": "Pending",
-        "priority": "High",
-    }
-
     response = client.post("/api/v1/tasks", json=task_data)
     task_id = response.json()["id"]
 

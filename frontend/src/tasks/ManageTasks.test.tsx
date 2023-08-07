@@ -1,28 +1,32 @@
 import { render, fireEvent, waitFor, act } from "@testing-library/react";
 import ManageTasks from "./ManageTasks";
 import { deleteTask, getTasks, updateTask } from "./tasks.api";
-import { PartialTask } from "../types/Task";
+import { Task, Priority, Status } from "../types/Task";
 
 jest.mock("./tasks.api");
 
-const testData: PartialTask[] = [
+const testData: Task[] = [
   {
     id: 1,
     title: "Task 1",
     description: "Description 1",
-    due_date: "",
-    assignee: "",
-    status: "",
-    priority: "",
+    due_date: null,
+    assignee: null,
+    status: Status.IN_PROGRESS,
+    priority: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 2,
     title: "Task 2",
     description: "Description 2",
-    due_date: "",
-    assignee: "",
-    status: "",
-    priority: "",
+    due_date: null,
+    assignee: null,
+    status: null,
+    priority: Priority.LOW,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
 ];
 
@@ -100,26 +104,31 @@ describe("ManageTasks Component", () => {
       fireEvent.change(getByLabelText("Description"), {
         target: { value: "Updated Description 1" },
       });
+      fireEvent.change(getByLabelText("Status"), {
+        target: { value: Status.DONE },
+      });
     });
 
-    mockedUpdateTask.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        id: 1,
-        title: "Updated Task 1",
-        description: "Updated Description 1",
-      }),
-    } as Response);
-
-    const updatedTask = {
+    const dataToUpdate = {
       id: 1,
       title: "Updated Task 1",
       description: "Updated Description 1",
-      date: null,
-      assignee: null,
-      status: null,
-      priority: null,
+      due_date: testData[0].due_date,
+      assignee: testData[0].assignee,
+      status: Status.DONE,
+      priority: testData[0].priority,
     };
+
+    const updatedTask = {
+      ...testData[0],
+      ...dataToUpdate,
+      updated_at: new Date().toISOString(),
+    };
+
+    mockedUpdateTask.mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedTask,
+    } as Response);
 
     mockedGetTasks.mockResolvedValueOnce({
       ok: true,
@@ -132,7 +141,7 @@ describe("ManageTasks Component", () => {
       expect(getByText("Updated Task 1")).toBeInTheDocument()
     );
 
-    expect(updateTask).toHaveBeenCalledWith(1, updatedTask);
+    expect(updateTask).toHaveBeenCalledWith(1, dataToUpdate);
 
     expect(getTasks).toHaveBeenCalledTimes(2);
   });

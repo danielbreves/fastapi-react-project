@@ -1,5 +1,5 @@
 import { Table, Button, ButtonGroup } from "react-bootstrap";
-import { Task } from "../types/Task";
+import { Task, priorityLabels, statusLabels } from "../types/Task";
 import { FaTrashCan, FaPencil } from "react-icons/fa6";
 import { formatDate } from "../utils/utils";
 
@@ -34,10 +34,10 @@ export default function TasksTable({
           <tr key={task.id}>
             <td>{task.title}</td>
             <td>{task.description}</td>
-            <td>{formatDate(new Date(task.due_date))}</td>
+            <td>{task.due_date && formatDate(new Date(task.due_date))}</td>
             <td>{task.assignee}</td>
-            <td>{task.status}</td>
-            <td>{task.priority}</td>
+            <td>{task.status && statusLabels[task.status]}</td>
+            <td>{task.priority && priorityLabels[task.priority]}</td>
             <td>{formatDate(new Date(task.created_at))}</td>
             <td>{formatDate(new Date(task.updated_at))}</td>
             <td>

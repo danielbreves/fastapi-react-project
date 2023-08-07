@@ -2,7 +2,14 @@ import { Form, Button } from "react-bootstrap";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { Task, PartialTask } from "../types/Task";
+import {
+  Task,
+  PartialTask,
+  Status,
+  Priority,
+  statusLabels,
+  priorityLabels,
+} from "../types/Task";
 import { mapEntries } from "../utils/utils";
 import { createTask, updateTask } from "./tasks.api";
 import { useState } from "react";
@@ -12,10 +19,14 @@ import LoadingSpinner from "../shared/LoadingSpinner";
 const schema = yup.object().shape({
   title: yup.string().required("Title is required"),
   description: yup.string(),
-  due_date: yup.string(),
+  due_date: yup
+    .string()
+    .test("is-valid-date", "Invalid date format", async (value) =>
+      value ? await yup.date().isValid(value) : true
+    ),
   assignee: yup.string(),
-  status: yup.string(),
-  priority: yup.string(),
+  status: yup.mixed<Status>().optional(),
+  priority: yup.mixed<Priority>().optional(),
 });
 
 interface TaskFormProps {
@@ -45,8 +56,8 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
           description: "",
           due_date: "",
           assignee: "",
-          status: "",
-          priority: "",
+          status: undefined,
+          priority: undefined,
         },
   });
 
@@ -169,12 +180,22 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
             name="status"
             control={control}
             render={({ field }) => (
-              <Form.Control
+              <Form.Select
                 {...field}
-                type="text"
                 isValid={isValid("status")}
                 isInvalid={isInvalid("status")}
-              />
+              >
+                <option key="empty" value="">
+                  -
+                </option>
+                {Object.entries(statusLabels).map(
+                  ([statusValue, statusLabel]) => (
+                    <option key={statusValue} value={statusValue}>
+                      {statusLabel}
+                    </option>
+                  )
+                )}
+              </Form.Select>
             )}
           />
           <Form.Control.Feedback type="invalid">
@@ -187,20 +208,41 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
             name="priority"
             control={control}
             render={({ field }) => (
-              <Form.Control
+              <Form.Select
                 {...field}
-                type="text"
                 isValid={isValid("priority")}
                 isInvalid={isInvalid("priority")}
-              />
+              >
+                <option key="empty" value="">
+                  -
+                </option>
+                {Object.entries(priorityLabels).map(
+                  ([priorityValue, priorityLabel]) => (
+                    <option key={priorityValue} value={priorityValue}>
+                      {priorityLabel}
+                    </option>
+                  )
+                )}
+              </Form.Select>
             )}
           />
           <Form.Control.Feedback type="invalid">
             {errors.priority?.message}
           </Form.Control.Feedback>
         </Form.Group>
-        <Button style={{ marginTop: "10px" }} variant="primary" type="submit" disabled={isLoading}>
-          {isLoading && <LoadingSpinner as="span" size="sm" style={{ marginRight: "5px" }} />}
+        <Button
+          style={{ marginTop: "10px" }}
+          variant="primary"
+          type="submit"
+          disabled={isLoading}
+        >
+          {isLoading && (
+            <LoadingSpinner
+              as="span"
+              size="sm"
+              style={{ marginRight: "5px" }}
+            />
+          )}
           Save Task
         </Button>
       </Form>
