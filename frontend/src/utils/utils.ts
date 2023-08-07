@@ -9,10 +9,19 @@ export function mapEntries<T extends Record<string, any>>(
   }, {} as T);
 }
 
-export function formatDate(date: Date) {
-  return new Intl.DateTimeFormat('en-AU', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit'
-  }).format(new Date(date));
+export function formatDate(date: Date, withTime = false) {
+  let options: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  };
+  if (withTime) {
+    options = {
+      ...options,
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+    };
+  }
+  return new Intl.DateTimeFormat("en-AU", options).format(new Date(date));
 }

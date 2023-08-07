@@ -24,8 +24,8 @@ export default function TasksTable({
           <th>Assignee</th>
           <th>Status</th>
           <th>Priority</th>
-          <th>Updated at</th>
           <th>Created at</th>
+          <th>Updated at</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -38,8 +38,8 @@ export default function TasksTable({
             <td>{task.assignee}</td>
             <td>{task.status && statusLabels[task.status]}</td>
             <td>{task.priority && priorityLabels[task.priority]}</td>
-            <td>{formatDate(new Date(task.created_at))}</td>
-            <td>{formatDate(new Date(task.updated_at))}</td>
+            <td>{formatDate(new Date(`${task.created_at}+00:00`), true)}</td>
+            <td>{formatDate(new Date(`${task.updated_at}+00:00`), true)}</td>
             <td>
               <div style={{ display: "flex" }}>
                 <ButtonGroup aria-label="Actions">
