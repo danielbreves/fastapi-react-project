@@ -1,6 +1,5 @@
 from pydantic import BaseModel, ConfigDict
 import datetime
-from typing import Optional
 from enum import Enum
 
 
@@ -25,11 +24,12 @@ class Priority(Enum):
 class TaskBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    description: Optional[str] = None
-    due_date: Optional[datetime.date] = None
-    assignee: Optional[str] = None
-    status: Optional[Status] = None
-    priority: Optional[Priority] = None
+    description: str | None = None
+    due_date: datetime.date | None = None
+    assignee: str | None = None
+    status: Status | None = None
+    priority: Priority | None = None
+    project_id: int | None = None
 
 
 class TaskCreate(TaskBase):
@@ -37,7 +37,7 @@ class TaskCreate(TaskBase):
 
 
 class TaskUpdate(TaskBase):
-    title: Optional[str] = None
+    title: str | None = None
 
 
 class Task(TaskBase):

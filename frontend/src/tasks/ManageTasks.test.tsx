@@ -1,13 +1,17 @@
 import { render, fireEvent, waitFor, act } from "@testing-library/react";
 import ManageTasks from "./ManageTasks";
-import { deleteTask, getTasks, updateTask } from "./tasks.api";
+import { getProjectTasks } from "../apis/projects.api";
+import { deleteTask, updateTask } from "../apis/tasks.api";
 import { Task, Priority, Status } from "../types/Task";
 
-jest.mock("./tasks.api");
+jest.mock("../apis/projects.api");
+jest.mock("../apis/tasks.api");
 
 function newUTCDatetime() {
   return new Date().toISOString().replace("Z", "");
 }
+
+const projectId = 32;
 
 const testData: Task[] = [
   {
@@ -20,6 +24,7 @@ const testData: Task[] = [
     priority: null,
     created_at: newUTCDatetime(),
     updated_at: newUTCDatetime(),
+    project_id: projectId,
   },
   {
     id: 2,
@@ -31,34 +36,35 @@ const testData: Task[] = [
     priority: Priority.LOW,
     created_at: newUTCDatetime(),
     updated_at: newUTCDatetime(),
+    project_id: projectId,
   },
 ];
 
-const mockedGetTasks = getTasks as jest.MockedFunction<typeof getTasks>;
+const mockedGetProjectTasks = getProjectTasks as jest.MockedFunction<typeof getProjectTasks>;
 const mockedUpdateTask = updateTask as jest.MockedFunction<typeof updateTask>;
 const mockedDeleteTask = deleteTask as jest.MockedFunction<typeof deleteTask>;
 
 describe("ManageTasks Component", () => {
   beforeEach(() => {
-    mockedGetTasks.mockResolvedValueOnce({
+    mockedGetProjectTasks.mockResolvedValueOnce({
       ok: true,
       json: async () => testData,
     } as Response);
   });
   test("renders without errors", async () => {
-    await act(async () => render(<ManageTasks />));
+    await act(async () => render(<ManageTasks projectId={projectId} />));
   });
 
   test('opens task form on "Add new" button click', async () => {
-    const { getByText } = await act(async () => render(<ManageTasks />));
+    const { getByText } = await act(async () => render(<ManageTasks projectId={projectId} />));
     const addButton = getByText("Add new");
     await act(async () => fireEvent.click(addButton));
     expect(getByText("Add new task")).toBeInTheDocument();
   });
 
   test("deletes a task when delete button is clicked in TasksTable", async () => {
-    const { container, getByText, queryByText, getByTestId } = await act(
-      async () => render(<ManageTasks />)
+    const { getByText, queryByText, getByTestId } = await act(
+      async () => render(<ManageTasks projectId={projectId} />)
     );
     await waitFor(() => expect(getByText("Task 1")).toBeInTheDocument());
 
@@ -72,7 +78,7 @@ describe("ManageTasks Component", () => {
       ok: true,
     } as Response);
 
-    mockedGetTasks.mockResolvedValueOnce({
+    mockedGetProjectTasks.mockResolvedValueOnce({
       ok: true,
       json: async () => [testData[1]],
     } as Response);
@@ -83,12 +89,12 @@ describe("ManageTasks Component", () => {
 
     await waitFor(() => expect(queryByText("Task 1")).not.toBeInTheDocument());
 
-    expect(getTasks).toHaveBeenCalledTimes(2);
+    expect(getProjectTasks).toHaveBeenCalledTimes(2);
   });
 
   test('updates a task when "Update" button is clicked in TasksTable', async () => {
     const { getByText, getByLabelText, getByTestId } = await act(async () =>
-      render(<ManageTasks />)
+      render(<ManageTasks projectId={projectId} />)
     );
     await waitFor(() => expect(getByText("Task 1")).toBeInTheDocument());
 
@@ -113,15 +119,14 @@ describe("ManageTasks Component", () => {
       });
     });
 
-    const dataToUpdate = {
-      id: 1,
+    let { created_at, updated_at, ...dataToUpdate } = testData[0];
+
+    dataToUpdate = {
+      ...dataToUpdate,
       title: "Updated Task 1",
       description: "Updated Description 1",
-      due_date: testData[0].due_date,
-      assignee: testData[0].assignee,
       status: Status.DONE,
-      priority: testData[0].priority,
-    };
+    }
 
     const updatedTask = {
       ...testData[0],
@@ -134,7 +139,7 @@ describe("ManageTasks Component", () => {
       json: async () => updatedTask,
     } as Response);
 
-    mockedGetTasks.mockResolvedValueOnce({
+    mockedGetProjectTasks.mockResolvedValueOnce({
       ok: true,
       json: async () => [updatedTask, testData[1]],
     } as Response);
@@ -147,6 +152,6 @@ describe("ManageTasks Component", () => {
 
     expect(updateTask).toHaveBeenCalledWith(1, dataToUpdate);
 
-    expect(getTasks).toHaveBeenCalledTimes(2);
+    expect(getProjectTasks).toHaveBeenCalledTimes(2);
   });
 });

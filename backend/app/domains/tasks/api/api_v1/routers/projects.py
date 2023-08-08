@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.domains.tasks.db.projects import project_repository, project_dtos
+from app.domains.tasks.db.tasks import task_dtos
 
 projects_router = r = APIRouter()
 
@@ -20,6 +21,14 @@ async def read_project(project_id: int, db: Session = Depends(get_db)):
 @r.get("/projects", response_model=List[project_dtos.Project])
 async def read_projects(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return project_repository.get_projects(db, skip=skip, limit=limit)
+
+
+@r.get("/projects/{project_id}/tasks", response_model=List[task_dtos.Task])
+async def read_project_tasks(project_id: int, db: Session = Depends(get_db)):
+    db_project = project_repository.get_project(db, project_id)
+    if db_project is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return db_project.tasks
 
 
 # Route to create a new project

@@ -1,6 +1,6 @@
-from app.domains.tasks.db.tasks import task_dtos
 from sqlalchemy.orm import Session
-from . import task_entity
+from app.domains.tasks.db.tasks import task_dtos, task_entity
+from app.domains.tasks.db.projects import project_entity
 
 
 def get_task(db: Session, task_id: int):

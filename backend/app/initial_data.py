@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
-from app.domains.users.db.user_repository import create_user, get_user_by_email
-from app.domains.users.db.user_dtos import UserCreate
-from app.domains.tasks.db.tasks.task_repository import create_task, get_task_by_title
-from app.domains.tasks.db.tasks.task_dtos import TaskCreate
-from app.domains.tasks.db.tasks.task_dtos import Priority as TaskPriority, Status as TaskStatus
-from app.domains.tasks.db.projects.project_dtos import Priority as ProjectPriority, Status as ProjectStatus
-from app.domains.tasks.db.projects.project_repository import create_project, get_project_by_title
-from app.domains.tasks.db.projects.project_dtos import ProjectCreate
+from random import choice
 from app.db.session import SessionLocal
 from datetime import date
 from app.core import config
+from app.domains.users.db.user_repository import create_user, get_user_by_email
+from app.domains.users.db.user_dtos import UserCreate
+from app.domains.tasks.db.tasks.task_repository import create_task, get_task_by_title
+from app.domains.tasks.db.tasks.task_dtos import Priority as TaskPriority, Status as TaskStatus, TaskCreate
+from app.domains.tasks.db.projects.project_dtos import Priority as ProjectPriority, Status as ProjectStatus
+from app.domains.tasks.db.projects.project_repository import create_project, get_project_by_title
+from app.domains.tasks.db.projects.project_dtos import ProjectCreate
 
 projects = [
     ProjectCreate(
@@ -95,13 +95,15 @@ def init() -> None:
         )
         print("Superuser created")
 
-    for task in tasks:
-        if not get_task_by_title(db, task.title):
-            create_task(db, task)
-
     for project in projects:
         if not get_project_by_title(db, project.title):
             create_project(db, project)
+
+    for task in tasks:
+        if not get_task_by_title(db, task.title):
+            project = get_project_by_title(db, choice(projects).title)
+            task.project_id = project.id
+            create_task(db, task)
 
 
 if __name__ == "__main__":

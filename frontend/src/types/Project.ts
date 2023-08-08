@@ -23,7 +23,7 @@ export const priorityLabels: Record<Priority, string> = {
 };
 
 
-export interface Task {
+export interface Project {
   id: number;
   title: string;
   description: string | null;
@@ -33,10 +33,9 @@ export interface Task {
   priority: Priority | null;
   created_at: string;
   updated_at: string;
-  project_id: number | null;
 }
 
-export interface PartialTask {
+export interface PartialProject {
     id?: number;
     title: string;
     description?: string;

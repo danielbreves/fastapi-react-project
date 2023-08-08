@@ -1,7 +1,7 @@
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
 import datetime
-from typing import Optional
+from app.domains.tasks.db.tasks.task_dtos import Task
 
 
 class Status(Enum):
@@ -25,11 +25,11 @@ class Priority(Enum):
 class ProjectBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    description: Optional[str] = None
-    due_date: Optional[datetime.date] = None
-    assignee: Optional[str] = None
-    status: Optional[Status] = None
-    priority: Optional[Priority] = None
+    description: str | None = None
+    due_date: datetime.date | None = None
+    assignee: str | None = None
+    status: Status | None = None
+    priority: Priority | None = None
 
 
 class ProjectCreate(ProjectBase):
@@ -37,11 +37,12 @@ class ProjectCreate(ProjectBase):
 
 
 class ProjectUpdate(ProjectBase):
-    title: Optional[str] = None
+    title: str | None = None
 
 
 class Project(ProjectBase):
     id: int
     title: str
+    tasks: list[Task] = []
     created_at: datetime.datetime
     updated_at: datetime.datetime

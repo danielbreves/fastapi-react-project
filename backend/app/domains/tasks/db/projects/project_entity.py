@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Enum, Text, Date, DateTime, func
+from sqlalchemy.orm import relationship
 from app.db.session import Base
 from app.domains.tasks.db.projects.project_dtos import Priority, Status
 
@@ -16,3 +17,5 @@ class Project(Base):
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(),
                         onupdate=func.now(), nullable=False)
+
+    tasks = relationship("Task", back_populates="project")

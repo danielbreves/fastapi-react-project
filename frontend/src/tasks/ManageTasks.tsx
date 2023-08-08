@@ -6,11 +6,12 @@ import SlideOver from "../shared/SlideOver";
 import { Task } from "../types/Task";
 import ConfirmDeleteModal from "../shared/ConfirmDelete";
 import TasksTable from "./TasksTable";
-import { deleteTask, getTasks } from "./tasks.api";
+import { deleteTask, getTasks } from "../apis/tasks.api";
 import ErrorToast from "../shared/Toast";
 import LoadingSpinner from "../shared/LoadingSpinner";
+import { getProjectTasks } from "../apis/projects.api";
 
-export default function ManageTasks() {
+export default function ManageTasks({ projectId }: { projectId: number}) {
   const [tasks, setData] = useState<Task[]>([]);
   const [isLoading, setLoading] = useState(true);
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -77,7 +78,7 @@ export default function ManageTasks() {
     (async () => {
       setLoading(true);
       try {
-        const response = await getTasks(controller.signal);
+        const response = await getProjectTasks(projectId, controller.signal);
 
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -116,6 +117,7 @@ export default function ManageTasks() {
               ? tasks.find((task) => task.id === editingTaskId)
               : undefined
           }
+          projectId={projectId}
         />
       </SlideOver>
       {isLoading && <LoadingSpinner />}

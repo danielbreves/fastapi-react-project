@@ -11,7 +11,7 @@ import {
   priorityLabels,
 } from "../types/Task";
 import { mapEntries } from "../utils/utils";
-import { createTask, updateTask } from "./tasks.api";
+import { createTask, updateTask } from "../apis/tasks.api";
 import { useState } from "react";
 import ErrorToast from "../shared/Toast";
 import LoadingSpinner from "../shared/LoadingSpinner";
@@ -32,9 +32,10 @@ const schema = yup.object().shape({
 interface TaskFormProps {
   onSaveTask: (task: PartialTask) => void;
   initialTask?: Task;
+  projectId: number;
 }
 
-export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
+export default function TaskForm({ onSaveTask, initialTask, projectId }: TaskFormProps) {
   const isUpdate = !!initialTask;
   const { created_at, updated_at, ...defaultValues } = initialTask || {};
   const [errorMessage, setErrorMessage] = useState("");
@@ -71,7 +72,11 @@ export default function TaskForm({ onSaveTask, initialTask }: TaskFormProps) {
 
   async function doSubmit(task: PartialTask) {
     setLoading(true);
-    const modifiedTask = mapEntries(task, "", null);
+
+    const modifiedTask = {
+      ...mapEntries(task, "", null),
+      project_id: projectId,
+    };
 
     try {
       const response = await (isUpdate
