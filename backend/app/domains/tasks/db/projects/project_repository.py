@@ -16,7 +16,8 @@ def get_projects(db: Session, skip: int = 0, limit: int = 100):
 
 
 def create_project(db: Session, project: project_dtos.ProjectCreate):
-    db_project = project_entity.Project(**project.dict(exclude_unset=True))
+    db_project = project_entity.Project(
+        **project.model_dump(exclude_unset=True))
     db.add(db_project)
     db.commit()
     db.refresh(db_project)
@@ -26,7 +27,7 @@ def create_project(db: Session, project: project_dtos.ProjectCreate):
 def update_project(db: Session, project_id: int, project: project_dtos.ProjectUpdate):
     db_project = db.query(project_entity.Project).filter(
         project_entity.Project.id == project_id).first()
-    for key, value in project.dict(exclude_unset=True).items():
+    for key, value in project.model_dump(exclude_unset=True).items():
         setattr(db_project, key, value)
     db.commit()
     db.refresh(db_project)

@@ -1,5 +1,4 @@
 from sqlalchemy import Column, Integer, String, Enum, Text, Date, DateTime, func
-
 from app.db.session import Base
 from app.domains.tasks.db.projects.project_dtos import Priority, Status
 

@@ -16,7 +16,7 @@ def get_tasks(db: Session, skip: int = 0, limit: int = 100):
 
 
 def create_task(db: Session, task: task_dtos.TaskCreate):
-    db_task = task_entity.Task(**task.dict(exclude_unset=True))
+    db_task = task_entity.Task(**task.model_dump(exclude_unset=True))
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
@@ -26,7 +26,7 @@ def create_task(db: Session, task: task_dtos.TaskCreate):
 def update_task(db: Session, task_id: int, task: task_dtos.TaskUpdate):
     db_task = db.query(task_entity.Task).filter(
         task_entity.Task.id == task_id).first()
-    for key, value in task.dict(exclude_unset=True).items():
+    for key, value in task.model_dump(exclude_unset=True).items():
         setattr(db_task, key, value)
     db.commit()
     db.refresh(db_task)

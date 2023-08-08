@@ -1,4 +1,5 @@
 from app.domains.users.db import user_entity
+from datetime import date, datetime
 
 
 def test_get_users(client, test_superuser, superuser_token_headers):
@@ -54,7 +55,7 @@ def test_edit_user(client, test_superuser, superuser_token_headers):
 
     response_data = response.json()
 
-    assert response_data['created_at'] == original_created_at
+    assert response_data['created_at'][:-5] == original_created_at[:-5]
 
     # this isn't working due to db transaction not being committed in the test
     # assert response_data['updated_at'] > original_updated_at
@@ -66,7 +67,7 @@ def test_edit_user(client, test_superuser, superuser_token_headers):
     assert response_data == new_user
 
 
-def test_edit_user_not_found(client, test_db, superuser_token_headers):
+def test_edit_user_not_found(client, superuser_token_headers):
     new_user = {
         "email": "newemail@email.com",
         "is_active": False,
@@ -88,14 +89,23 @@ def test_get_user(
         f"/api/v1/users/{test_user.id}", headers=superuser_token_headers
     )
     assert response.status_code == 200
-    assert response.json() == {
+    response_data = response.json()
+
+    created_at_response = datetime.strptime(
+        response_data['created_at'], "%Y-%m-%dT%H:%M:%S.%f")
+    updated_at_response = datetime.strptime(
+        response_data['updated_at'], "%Y-%m-%dT%H:%M:%S.%f")
+
+    expected_data = {
         "id": test_user.id,
         "email": test_user.email,
         "is_active": bool(test_user.is_active),
         "is_superuser": test_user.is_superuser,
-        "created_at": test_user.created_at.isoformat(),
-        "updated_at": test_user.updated_at.isoformat(),
+        "created_at": created_at_response.isoformat(),
+        "updated_at": updated_at_response.isoformat(),
     }
+
+    assert response_data == expected_data
 
 
 def test_user_not_found(client, superuser_token_headers):

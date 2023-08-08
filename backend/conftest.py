@@ -9,6 +9,7 @@ from app.core import config, security
 from app.db.session import Base, get_db
 from app.domains.users.db import user_entity
 from app.main import app
+from app.domains.users.db.user_repository import get_user_by_email
 import debugpy
 
 
@@ -60,7 +61,7 @@ def test_db():
     connection.close()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(autouse=True)
 def create_test_db():
     """
     Create a test database and use it for the whole test session.
@@ -114,14 +115,20 @@ def test_user(test_db) -> user_entity.User:
     """
     Make a test user in the database
     """
+    fake_user_email = "fake@email.com"
+    user = get_user_by_email(test_db, fake_user_email)
 
-    user = user_entity.User(
-        email="fake@email.com",
-        hashed_password=get_password_hash(),
-        is_active=True,
-    )
-    test_db.add(user)
-    test_db.commit()
+    if not user:
+        user = user_entity.User(
+            email=fake_user_email,
+            hashed_password=get_password_hash(),
+            is_active=True,
+        )
+        test_db.add(user)
+        test_db.commit()
+    else:
+        print("user already exists")
+
     return user
 
 
@@ -130,14 +137,17 @@ def test_superuser(test_db) -> user_entity.User:
     """
     Superuser for testing
     """
+    fake_user_email = "fakeadmin@email.com"
+    user = get_user_by_email(test_db, fake_user_email)
 
-    user = user_entity.User(
-        email="fakeadmin@email.com",
-        hashed_password=get_password_hash(),
-        is_superuser=True,
-    )
-    test_db.add(user)
-    test_db.commit()
+    if not user:
+        user = user_entity.User(
+            email=fake_user_email,
+            hashed_password=get_password_hash(),
+            is_superuser=True,
+        )
+        test_db.add(user)
+        test_db.commit()
     return user
 
 

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 import typing as t
 
@@ -15,29 +15,26 @@ class UserOut(UserBase):
 
 
 class UserCreate(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+
     email: str
     password: str
 
-    class Config:
-        orm_mode = True
-
 
 class UserEdit(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+
     email: t.Optional[str] = None
     password: t.Optional[str] = None
 
-    class Config:
-        orm_mode = True
-
 
 class User(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     email: str
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        orm_mode = True
 
 
 class Token(BaseModel):
