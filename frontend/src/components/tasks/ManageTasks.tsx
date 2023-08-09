@@ -15,7 +15,7 @@ export default function ManageTasks({ projectId }: { projectId: number }) {
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [taskToDeleteId, setTaskToDeleteId] = useState<number | null>(null);
+  const [taskIdToDelete, setTaskIdToDelete] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [requestsInProgress, setRequestsInProgress] = useState<
     Promise<Response>[]
@@ -37,44 +37,46 @@ export default function ManageTasks({ projectId }: { projectId: number }) {
   }
 
   function handleDeleteTask(taskId: number) {
-    setTaskToDeleteId(taskId);
+    setTaskIdToDelete(taskId);
     setShowDeleteModal(true);
   }
 
   function resetDeleteTask() {
-    setTaskToDeleteId(null);
+    setTaskIdToDelete(null);
     setShowDeleteModal(false);
   }
 
-  async function doDeleteTask() {
-    if (!taskToDeleteId) {
+  function doDeleteTask() {
+    if (!taskIdToDelete) {
       return;
     }
 
-    const currentReq = deleteTask(taskToDeleteId);
+    const currentReq = deleteTask(taskIdToDelete);
     resetDeleteTask();
 
-    try {
-      setRequestsInProgress((prev) => [...prev, currentReq]);
+    (async () => {
+      try {
+        setRequestsInProgress((prev) => [...prev, currentReq]);
 
-      const response = await currentReq;
+        const response = await currentReq;
 
-      if (!response.ok) {
-        throw new Error("Failed to delete task");
+        if (!response.ok) {
+          throw new Error("Failed to delete task");
+        }
+
+        fetchTasks();
+      } catch (error) {
+        if (error instanceof Error) {
+          setErrorMessage(error.message);
+        } else {
+          console.error("Error deleting task:", error);
+        }
+      } finally {
+        setRequestsInProgress((prevReqs) =>
+          prevReqs.filter((prev) => prev !== currentReq)
+        );
       }
-
-      fetchTasks();
-    } catch (error) {
-      if (error instanceof Error) {
-        setErrorMessage(error.message);
-      } else {
-        console.error("Error deleting task:", error);
-      }
-    } finally {
-      setRequestsInProgress((prevReqs) =>
-        prevReqs.filter((prev) => prev !== currentReq)
-      );
-    }
+    })();
   }
 
   function fetchTasks() {
