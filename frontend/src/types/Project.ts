@@ -29,8 +29,8 @@ export interface Project {
   description: string | null;
   due_date: string | null;
   assignee: string | null;
-  status: Status | null;
-  priority: Priority | null;
+  status: Status | null | "";
+  priority: Priority | null | "";
   created_at: string;
   updated_at: string;
 }
@@ -41,6 +41,6 @@ export interface PartialProject {
     description?: string;
     due_date?: string;
     assignee?: string;
-    status?: Status;
-    priority?: Priority;
+    status?: Status | "";
+    priority?: Priority | "";
   }
