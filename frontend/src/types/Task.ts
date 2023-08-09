@@ -29,8 +29,8 @@ export interface Task {
   description: string | null;
   due_date: string | null;
   assignee: string | null;
-  status: Status | null;
-  priority: Priority | null;
+  status: Status | null | "";
+  priority: Priority | null | "";
   created_at: string;
   updated_at: string;
   project_id: number | null;
@@ -42,6 +42,6 @@ export interface PartialTask {
     description?: string;
     due_date?: string;
     assignee?: string;
-    status?: Status;
-    priority?: Priority;
+    status: Status | "";
+    priority: Priority | "";
   }

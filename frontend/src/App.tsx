@@ -1,9 +1,7 @@
-import "bootstrap/dist/css/bootstrap.css";
-import "./App.css";
-import ManageTasks from "./tasks/ManageTasks";
+import Home from "./pages/Home";
 
 function App() {
-  return <ManageTasks projectId={34} />;
+  return <Home />;
 }
 
 export default App;

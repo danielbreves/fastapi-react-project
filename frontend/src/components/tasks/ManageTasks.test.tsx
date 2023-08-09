@@ -1,11 +1,18 @@
-import { render, fireEvent, waitFor, act } from "@testing-library/react";
+import {
+  render,
+  fireEvent,
+  waitFor,
+  act,
+  within,
+} from "@testing-library/react";
 import ManageTasks from "./ManageTasks";
-import { getProjectTasks } from "../apis/projects.api";
-import { deleteTask, updateTask } from "../apis/tasks.api";
-import { Task, Priority, Status } from "../types/Task";
+import { getProjectTasks } from "../../apis/projects.api";
+import { deleteTask, updateTask } from "../../apis/tasks.api";
+import { Task, Priority, Status } from "../../types/Task";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../apis/projects.api");
-jest.mock("../apis/tasks.api");
+jest.mock("../../apis/projects.api");
+jest.mock("../../apis/tasks.api");
 
 function newUTCDatetime() {
   return new Date().toISOString().replace("Z", "");
@@ -40,7 +47,9 @@ const testData: Task[] = [
   },
 ];
 
-const mockedGetProjectTasks = getProjectTasks as jest.MockedFunction<typeof getProjectTasks>;
+const mockedGetProjectTasks = getProjectTasks as jest.MockedFunction<
+  typeof getProjectTasks
+>;
 const mockedUpdateTask = updateTask as jest.MockedFunction<typeof updateTask>;
 const mockedDeleteTask = deleteTask as jest.MockedFunction<typeof deleteTask>;
 
@@ -56,15 +65,17 @@ describe("ManageTasks Component", () => {
   });
 
   test('opens task form on "Add new" button click', async () => {
-    const { getByText } = await act(async () => render(<ManageTasks projectId={projectId} />));
+    const { getByText } = await act(async () =>
+      render(<ManageTasks projectId={projectId} />)
+    );
     const addButton = getByText("Add new");
     await act(async () => fireEvent.click(addButton));
     expect(getByText("Add new task")).toBeInTheDocument();
   });
 
   test("deletes a task when delete button is clicked in TasksTable", async () => {
-    const { getByText, queryByText, getByTestId } = await act(
-      async () => render(<ManageTasks projectId={projectId} />)
+    const { getByText, queryByText, getByTestId } = await act(async () =>
+      render(<ManageTasks projectId={projectId} />)
     );
     await waitFor(() => expect(getByText("Task 1")).toBeInTheDocument());
 
@@ -114,10 +125,12 @@ describe("ManageTasks Component", () => {
       fireEvent.change(getByLabelText("Description"), {
         target: { value: "Updated Description 1" },
       });
-      fireEvent.change(getByLabelText("Status"), {
-        target: { value: Status.DONE },
-      });
+      const { getByRole } = within(getByTestId("select-status"));
+      const select = getByRole("button");
+      fireEvent.mouseDown(select);
     });
+
+    fireEvent.click(getByTestId("select-status-done"));
 
     let { created_at, updated_at, ...dataToUpdate } = testData[0];
 
@@ -126,7 +139,7 @@ describe("ManageTasks Component", () => {
       title: "Updated Task 1",
       description: "Updated Description 1",
       status: Status.DONE,
-    }
+    };
 
     const updatedTask = {
       ...testData[0],
@@ -155,3 +168,6 @@ describe("ManageTasks Component", () => {
     expect(getProjectTasks).toHaveBeenCalledTimes(2);
   });
 });
+function getByRoleParent(arg0: string): HTMLElement {
+  throw new Error("Function not implemented.");
+}

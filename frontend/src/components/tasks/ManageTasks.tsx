@@ -1,15 +1,14 @@
-import "bootstrap/dist/css/bootstrap.css";
-import { Button } from "react-bootstrap";
+import { Button } from "@mui/material";
 import { useState, useEffect } from "react";
 import TaskForm from "./TaskForm";
 import SlideOver from "../shared/SlideOver";
-import { Task } from "../types/Task";
+import { Task } from "../../types/Task";
 import ConfirmDeleteModal from "../shared/ConfirmDelete";
 import TasksTable from "./TasksTable";
-import { deleteTask, getTasks } from "../apis/tasks.api";
-import ErrorToast from "../shared/Toast";
+import { deleteTask, getTasks } from "../../apis/tasks.api";
+import ErrorToast from "../shared/ErrorToast";
 import LoadingSpinner from "../shared/LoadingSpinner";
-import { getProjectTasks } from "../apis/projects.api";
+import { getProjectTasks } from "../../apis/projects.api";
 
 export default function ManageTasks({ projectId }: { projectId: number}) {
   const [tasks, setData] = useState<Task[]>([]);
@@ -102,7 +101,7 @@ export default function ManageTasks({ projectId }: { projectId: number}) {
 
   return (
     <>
-      <Button variant="primary" onClick={() => setShowTaskForm(true)}>
+      <Button variant="outlined" onClick={() => setShowTaskForm(true)}>
         Add new
       </Button>
       <SlideOver
@@ -118,11 +117,11 @@ export default function ManageTasks({ projectId }: { projectId: number}) {
               : undefined
           }
           projectId={projectId}
+          onError={(message: string) => setErrorMessage(message)}
         />
       </SlideOver>
       {isLoading && <LoadingSpinner />}
       <ErrorToast
-        position="top-end"
         message={errorMessage}
         handleClose={() => setErrorMessage("")}
       />

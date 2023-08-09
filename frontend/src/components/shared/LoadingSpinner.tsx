@@ -1,12 +1,12 @@
 import { ComponentPropsWithRef } from "react";
-import Spinner from "react-bootstrap/Spinner";
+import { CircularProgress } from '@mui/material';
 
 export default function LoadingSpinner(
-  props: ComponentPropsWithRef<typeof Spinner>
+  props: ComponentPropsWithRef<typeof CircularProgress>
 ) {
   return (
-    <Spinner {...props} animation="border" role="status">
+    <CircularProgress {...props}>
       <span className="visually-hidden">Loading...</span>
-    </Spinner>
+    </CircularProgress>
   );
 }
