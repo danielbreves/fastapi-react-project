@@ -5,13 +5,18 @@ import SlideOver from "../shared/SlideOver";
 import { Task } from "../../types/Task";
 import ConfirmDeleteModal from "../shared/ConfirmDelete";
 import TasksTable from "./TasksTable";
-import { deleteTask, getTasks } from "../../apis/tasks.api";
+import { deleteTask } from "../../apis/tasks.api";
 import ErrorToast from "../shared/ErrorToast";
 import { getProjectTasks } from "../../apis/projects.api";
 import Loading from "../shared/Loading";
+import { useParams } from "react-router-dom";
 
-export default function ManageTasks({ projectId }: { projectId: number }) {
-  const [tasks, setData] = useState<Task[]>([]);
+interface ManageTasksParams extends Record<string, string | undefined> {
+  projectId: string;
+}
+
+export default function ManageTasks() {
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -20,6 +25,8 @@ export default function ManageTasks({ projectId }: { projectId: number }) {
   const [requestsInProgress, setRequestsInProgress] = useState<
     Promise<Response>[]
   >([]);
+  const params = useParams<ManageTasksParams>();
+  const projectId = Number(params.projectId);
 
   function handleSaveTask() {
     fetchTasks();
@@ -93,7 +100,7 @@ export default function ManageTasks({ projectId }: { projectId: number }) {
           throw new Error("Network response was not ok");
         }
 
-        setData(await response.json());
+        setTasks(await response.json());
       } catch (error) {
         if (error instanceof Error && error.name !== "AbortError") {
           setErrorMessage(error.message);

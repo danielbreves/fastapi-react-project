@@ -6,6 +6,7 @@ import {
   Box,
   Toolbar,
 } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 
 const drawerWidth = 240;
 
@@ -32,14 +33,11 @@ export default function SideNav({
       <Toolbar />
       <Box sx={{ overflow: "auto" }}>
         <List>
-          <ListItemButton href="/home">
+          <ListItemButton component={RouterLink} to="/">
+            <ListItemText primary="Home" />
+          </ListItemButton>
+          <ListItemButton component={RouterLink} to="/projects">
             <ListItemText primary="Projects" />
-          </ListItemButton>
-          <ListItemButton href="/about">
-            <ListItemText primary="About" />
-          </ListItemButton>
-          <ListItemButton href="/contact">
-            <ListItemText primary="Contact" />
           </ListItemButton>
         </List>
       </Box>

@@ -23,7 +23,6 @@ import {
 } from "../../types/Task";
 import { mapEntries } from "../../utils/utils";
 import { createTask, updateTask } from "../../apis/tasks.api";
-import ErrorToast from "../shared/ErrorToast";
 
 const schema = yup.object().shape({
   title: yup.string().required("Title is required"),

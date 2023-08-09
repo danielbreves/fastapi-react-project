@@ -1,10 +1,4 @@
-import {
-  render,
-  fireEvent,
-  waitFor,
-  act,
-  within,
-} from "@testing-library/react";
+import { render, fireEvent, waitFor, act } from "@testing-library/react";
 import ManageTasks from "./ManageTasks";
 import { getProjectTasks } from "../../apis/projects.api";
 import { deleteTask } from "../../apis/tasks.api";
@@ -15,6 +9,16 @@ jest.mock("../../apis/projects.api");
 jest.mock("../../apis/tasks.api");
 
 const projectId = 32;
+
+jest.mock("react-router-dom", () => {
+  const originalModule = jest.requireActual("react-router-dom");
+
+  return {
+    __esModule: true,
+    ...originalModule,
+    useParams: () => ({ projectId: String(projectId) }),
+  };
+});
 
 const testData: Task[] = [
   {
@@ -56,13 +60,11 @@ describe("ManageTasks Component", () => {
     } as Response);
   });
   test("renders without errors", async () => {
-    await act(async () => render(<ManageTasks projectId={projectId} />));
+    await act(async () => render(<ManageTasks />));
   });
 
   test('opens task form when "Add new" button is clicked', async () => {
-    const { getByText } = await act(async () =>
-      render(<ManageTasks projectId={projectId} />)
-    );
+    const { getByText } = await act(async () => render(<ManageTasks />));
     const addButton = getByText("Add new");
     await act(async () => fireEvent.click(addButton));
     expect(getByText("Add new task")).toBeInTheDocument();
@@ -70,7 +72,7 @@ describe("ManageTasks Component", () => {
 
   test("opens an update task form with task data when the update button is clicked on a task", async () => {
     const { getByText, getByLabelText, getByTestId } = await act(async () =>
-      render(<ManageTasks projectId={projectId} />)
+      render(<ManageTasks />)
     );
 
     await waitFor(() => expect(getByText("Task 1")).toBeInTheDocument());
@@ -86,7 +88,7 @@ describe("ManageTasks Component", () => {
 
   test("deletes a task when delete button is clicked on a task", async () => {
     const { getByText, queryByText, getByTestId } = await act(async () =>
-      render(<ManageTasks projectId={projectId} />)
+      render(<ManageTasks />)
     );
 
     expect(getByText("Task 1")).toBeInTheDocument();
