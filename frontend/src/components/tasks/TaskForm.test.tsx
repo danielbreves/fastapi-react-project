@@ -1,14 +1,6 @@
-import {
-  render,
-  fireEvent,
-  waitFor,
-  act,
-  within,
-} from "@testing-library/react";
-import ManageTasks from "./ManageTasks";
-import { getProjectTasks } from "../../apis/projects.api";
-import { createTask, deleteTask, updateTask } from "../../apis/tasks.api";
-import { Task, Status, PartialTask } from "../../types/Task";
+import { render, fireEvent, act, within } from "@testing-library/react";
+import { createTask, updateTask } from "../../apis/tasks.api";
+import { Task, Status } from "../../types/Task";
 import TaskForm from "./TaskForm";
 
 jest.mock("../../apis/projects.api");

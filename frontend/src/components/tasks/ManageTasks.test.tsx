@@ -7,7 +7,7 @@ import {
 } from "@testing-library/react";
 import ManageTasks from "./ManageTasks";
 import { getProjectTasks } from "../../apis/projects.api";
-import { deleteTask, updateTask } from "../../apis/tasks.api";
+import { deleteTask } from "../../apis/tasks.api";
 import { Task, Priority, Status } from "../../types/Task";
 import { newUTCDatetime } from "../../test-utils/utils";
 
@@ -46,7 +46,6 @@ const testData: Task[] = [
 const mockedGetProjectTasks = getProjectTasks as jest.MockedFunction<
   typeof getProjectTasks
 >;
-const mockedUpdateTask = updateTask as jest.MockedFunction<typeof updateTask>;
 const mockedDeleteTask = deleteTask as jest.MockedFunction<typeof deleteTask>;
 
 describe("ManageTasks Component", () => {
