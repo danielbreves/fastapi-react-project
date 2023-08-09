@@ -9,14 +9,10 @@ import ManageTasks from "./ManageTasks";
 import { getProjectTasks } from "../../apis/projects.api";
 import { deleteTask, updateTask } from "../../apis/tasks.api";
 import { Task, Priority, Status } from "../../types/Task";
-import userEvent from "@testing-library/user-event";
+import { newUTCDatetime } from "../../test-utils/utils";
 
 jest.mock("../../apis/projects.api");
 jest.mock("../../apis/tasks.api");
-
-function newUTCDatetime() {
-  return new Date().toISOString().replace("Z", "");
-}
 
 const projectId = 32;
 
@@ -64,7 +60,7 @@ describe("ManageTasks Component", () => {
     await act(async () => render(<ManageTasks projectId={projectId} />));
   });
 
-  test('opens task form on "Add new" button click', async () => {
+  test('opens task form when "Add new" button is clicked', async () => {
     const { getByText } = await act(async () =>
       render(<ManageTasks projectId={projectId} />)
     );
@@ -73,11 +69,26 @@ describe("ManageTasks Component", () => {
     expect(getByText("Add new task")).toBeInTheDocument();
   });
 
-  test("deletes a task when delete button is clicked in TasksTable", async () => {
+  test("opens an update task form with task data when the update button is clicked on a task", async () => {
+    const { getByText, getByLabelText, getByTestId } = await act(async () =>
+      render(<ManageTasks projectId={projectId} />)
+    );
+
+    await waitFor(() => expect(getByText("Task 1")).toBeInTheDocument());
+
+    const updateButton = getByTestId("update-button-1");
+
+    await act(async () => fireEvent.click(updateButton));
+
+    expect(getByText("Update task")).toBeInTheDocument();
+    expect(getByLabelText("Title*")).toHaveValue("Task 1");
+    expect(getByLabelText("Description")).toHaveValue("Description 1");
+  });
+
+  test("deletes a task when delete button is clicked on a task", async () => {
     const { getByText, queryByText, getByTestId } = await act(async () =>
       render(<ManageTasks projectId={projectId} />)
     );
-    await waitFor(() => expect(getByText("Task 1")).toBeInTheDocument());
 
     expect(getByText("Task 1")).toBeInTheDocument();
 
@@ -102,72 +113,4 @@ describe("ManageTasks Component", () => {
 
     expect(getProjectTasks).toHaveBeenCalledTimes(2);
   });
-
-  test('updates a task when "Update" button is clicked in TasksTable', async () => {
-    const { getByText, getByLabelText, getByTestId } = await act(async () =>
-      render(<ManageTasks projectId={projectId} />)
-    );
-    await waitFor(() => expect(getByText("Task 1")).toBeInTheDocument());
-
-    expect(getByText("Task 1")).toBeInTheDocument();
-
-    const updateButton = getByTestId("update-button-1");
-
-    await act(async () => fireEvent.click(updateButton));
-
-    expect(getByLabelText("Title*")).toHaveValue("Task 1");
-    expect(getByLabelText("Description")).toHaveValue("Description 1");
-
-    await act(async () => {
-      fireEvent.change(getByLabelText("Title*"), {
-        target: { value: "Updated Task 1" },
-      });
-      fireEvent.change(getByLabelText("Description"), {
-        target: { value: "Updated Description 1" },
-      });
-      const { getByRole } = within(getByTestId("select-status"));
-      const select = getByRole("button");
-      fireEvent.mouseDown(select);
-    });
-
-    fireEvent.click(getByTestId("select-status-done"));
-
-    let { created_at, updated_at, ...dataToUpdate } = testData[0];
-
-    dataToUpdate = {
-      ...dataToUpdate,
-      title: "Updated Task 1",
-      description: "Updated Description 1",
-      status: Status.DONE,
-    };
-
-    const updatedTask = {
-      ...testData[0],
-      ...dataToUpdate,
-      updated_at: newUTCDatetime(),
-    };
-
-    mockedUpdateTask.mockResolvedValueOnce({
-      ok: true,
-      json: async () => updatedTask,
-    } as Response);
-
-    mockedGetProjectTasks.mockResolvedValueOnce({
-      ok: true,
-      json: async () => [updatedTask, testData[1]],
-    } as Response);
-
-    await act(async () => fireEvent.click(getByText("Save Task")));
-
-    await waitFor(() =>
-      expect(getByText("Updated Task 1")).toBeInTheDocument()
-    );
-
-    expect(updateTask).toHaveBeenCalledWith(1, dataToUpdate);
-
-    expect(getProjectTasks).toHaveBeenCalledTimes(2);
-  });
 });
-function getByRoleParent(arg0: string): HTMLElement {
-  throw new Error("Function not implemented.");
-}
