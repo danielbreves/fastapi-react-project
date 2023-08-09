@@ -25,6 +25,7 @@ export default function SideNav({
       onClose={isSmallScreen ? toggleDrawer : undefined}
       sx={{
         width: drawerWidth,
+        flexShrink: 0,
         [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: "border-box" },
       }}
     >

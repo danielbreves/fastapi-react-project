@@ -7,17 +7,19 @@ import ConfirmDeleteModal from "../shared/ConfirmDelete";
 import TasksTable from "./TasksTable";
 import { deleteTask, getTasks } from "../../apis/tasks.api";
 import ErrorToast from "../shared/ErrorToast";
-import LoadingSpinner from "../shared/LoadingSpinner";
 import { getProjectTasks } from "../../apis/projects.api";
+import Loading from "../shared/Loading";
 
-export default function ManageTasks({ projectId }: { projectId: number}) {
+export default function ManageTasks({ projectId }: { projectId: number }) {
   const [tasks, setData] = useState<Task[]>([]);
-  const [isLoading, setLoading] = useState(true);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [taskToDeleteId, setTaskToDeleteId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [requestsInProgress, setRequestsInProgress] = useState<
+    Promise<Response>[]
+  >([]);
 
   function handleSaveTask() {
     fetchTasks();
@@ -49,11 +51,13 @@ export default function ManageTasks({ projectId }: { projectId: number}) {
       return;
     }
 
-    setLoading(true);
+    const currentReq = deleteTask(taskToDeleteId);
     resetDeleteTask();
 
     try {
-      const response = await deleteTask(taskToDeleteId);
+      setRequestsInProgress((prev) => [...prev, currentReq]);
+
+      const response = await currentReq;
 
       if (!response.ok) {
         throw new Error("Failed to delete task");
@@ -67,7 +71,9 @@ export default function ManageTasks({ projectId }: { projectId: number}) {
         console.error("Error deleting task:", error);
       }
     } finally {
-      setLoading(false);
+      setRequestsInProgress((prevReqs) =>
+        prevReqs.filter((prev) => prev !== currentReq)
+      );
     }
   }
 
@@ -75,35 +81,41 @@ export default function ManageTasks({ projectId }: { projectId: number}) {
     const controller = new AbortController();
 
     (async () => {
-      setLoading(true);
+      const currentReq = getProjectTasks(projectId, controller.signal);
       try {
-        const response = await getProjectTasks(projectId, controller.signal);
+        setRequestsInProgress((prev) => [...prev, currentReq]);
+
+        const response = await currentReq;
 
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
+
         setData(await response.json());
       } catch (error) {
-        if (error instanceof Error) {
+        if (error instanceof Error && error.name !== "AbortError") {
           setErrorMessage(error.message);
         } else {
           console.error("Error fetching tasks:", error);
         }
       } finally {
-        setLoading(false);
+        setRequestsInProgress((prevReqs) =>
+          prevReqs.filter((prev) => prev !== currentReq)
+        );
       }
     })();
 
     return () => controller.abort();
   }
 
-  useEffect(fetchTasks, []);
+  useEffect(fetchTasks, [projectId]);
 
   return (
     <>
       <Button variant="outlined" onClick={() => setShowTaskForm(true)}>
         Add new
       </Button>
+      {!!requestsInProgress.length && <Loading />}
       <SlideOver
         show={showTaskForm}
         onHide={closeTaskForm}
@@ -120,7 +132,6 @@ export default function ManageTasks({ projectId }: { projectId: number}) {
           onError={(message: string) => setErrorMessage(message)}
         />
       </SlideOver>
-      {isLoading && <LoadingSpinner />}
       <ErrorToast
         message={errorMessage}
         handleClose={() => setErrorMessage("")}

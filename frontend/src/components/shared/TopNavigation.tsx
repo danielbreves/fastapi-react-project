@@ -16,29 +16,27 @@ export default function TopNavigation({
   toggleDrawer: () => void;
 }) {
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar
-        position="fixed"
-        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
-      >
-        <Toolbar>
-          {isSmallScreen && (
-            <IconButton
-              edge="start"
-              color="inherit"
-              aria-label="menu"
-              sx={{ mr: 2 }}
-              onClick={toggleDrawer} // Toggle the drawer when the button is clicked
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Project Manager
-          </Typography>
-          <Button color="inherit">Daniel</Button>
-        </Toolbar>
-      </AppBar>
-    </Box>
+    <AppBar
+      position="fixed"
+      sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+    >
+      <Toolbar>
+        {isSmallScreen && (
+          <IconButton
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            sx={{ mr: 2 }}
+            onClick={toggleDrawer} // Toggle the drawer when the button is clicked
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          Project Manager
+        </Typography>
+        <Button color="inherit">Daniel</Button>
+      </Toolbar>
+    </AppBar>
   );
 }
