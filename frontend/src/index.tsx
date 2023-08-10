@@ -3,7 +3,6 @@ import ReactDOM from "react-dom/client";
 import reportWebVitals from "./reportWebVitals";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ErrorPage from "./pages/Error";
-import Root from "./routes/root";
 import ManageTasks from "./pages/ManageTasks";
 import {
   Link as RouterLink,
@@ -12,6 +11,7 @@ import {
 import { LinkProps } from "@mui/material/Link";
 import { createTheme } from "@mui/material";
 import ManageProjects from "./pages/ManageProjects";
+import App from "./App";
 
 const LinkBehavior = React.forwardRef<
   HTMLAnchorElement,
@@ -40,7 +40,7 @@ createTheme({
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Root />,
+    element: <App />,
     errorElement: <ErrorPage />,
     children: [
       {
