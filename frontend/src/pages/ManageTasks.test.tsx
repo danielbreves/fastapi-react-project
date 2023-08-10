@@ -5,8 +5,8 @@ import { deleteTask } from "../apis/tasks.api";
 import { Task, Priority, Status } from "../types/Task";
 import { newUTCDatetime } from "../test-utils/utils";
 
-jest.mock("../../apis/projects.api");
-jest.mock("../../apis/tasks.api");
+jest.mock("../apis/projects.api");
+jest.mock("../apis/tasks.api");
 
 const projectId = 32;
 

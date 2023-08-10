@@ -6,7 +6,7 @@ import { Project, Priority, Status } from "../types/Project";
 import { newUTCDatetime } from "../test-utils/utils";
 import { MemoryRouter } from "react-router-dom";
 
-jest.mock("../../apis/projects.api");
+jest.mock("../apis/projects.api");
 
 const testData: Project[] = [
   {
