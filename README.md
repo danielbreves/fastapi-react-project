@@ -2,8 +2,8 @@
 
 ## Features
 
-- **FastAPI** with Python 3.8
-- **React 16** with Typescript, Redux, and react-router
+- **FastAPI** with Python 3.10
+- **React 18** with Typescript, Material UI, React Hook Form and React Router
 - Postgres
 - SqlAlchemy with Alembic for migrations
 - Pytest for backend tests
@@ -142,18 +142,18 @@ backend
     │       └── endpoints
     ├── core    # config
     ├── db      # db models
+    ├── domains # dtos, entities, repositories per domain
     ├── tests   # pytest
     └── main.py # entrypoint to backend
 
 frontend
 └── public
 └── src
+    ├── apis
     ├── components
-    │   └── Home.tsx
-    ├── config
-    │   └── index.tsx   # constants
-    ├── __tests__
-    │   └── test_home.tsx
+    │   └── shared
+    ├── layouts
+    ├── pages
+    ├── routes
     ├── index.tsx   # entrypoint
-    └── App.tsx     # handles routing
 ```
