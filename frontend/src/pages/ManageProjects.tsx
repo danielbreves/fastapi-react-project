@@ -1,17 +1,17 @@
 import { Button } from "@mui/material";
 import { useState, useEffect } from "react";
-import ProjectForm from "./ProjectForm";
-import SlideOver from "../shared/SlideOver";
-import { Project } from "../../types/Project";
-import ConfirmDeleteModal from "../shared/ConfirmDelete";
-import ProjectsTable from "./ProjectsTable";
-import { deleteProject, getProjects } from "../../apis/projects.api";
-import ErrorToast from "../shared/ErrorToast";
-import Loading from "../shared/Loading";
+import ProjectForm from "../components/projects/ProjectForm";
+import SlideOver from "../components/shared/SlideOver";
+import { Project } from "../components/../types/Project";
+import ConfirmDeleteModal from "../components/shared/ConfirmDelete";
+import ProjectsTable from "../components/projects/ProjectsTable";
+import { deleteProject, getProjects } from "../apis/projects.api";
+import ErrorToast from "../components/shared/ErrorToast";
+import Loading from "../components/shared/Loading";
 
-export default function ManageProjects() {
+export default function ManageProjects({ createNew }: { createNew?: boolean}) {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [showProjectForm, setShowProjectForm] = useState(false);
+  const [showProjectForm, setShowProjectForm] = useState<boolean>(createNew || false);
   const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [projectIdToDelete, setProjectIdToDelete] = useState<number | null>(null);

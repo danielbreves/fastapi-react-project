@@ -1,9 +1,9 @@
 import { render, fireEvent, waitFor, act } from "@testing-library/react";
 import ManageProjects from "./ManageProjects";
-import { getProjects } from "../../apis/projects.api";
-import { deleteProject } from "../../apis/projects.api";
-import { Project, Priority, Status } from "../../types/Project";
-import { newUTCDatetime } from "../../test-utils/utils";
+import { getProjects } from "../apis/projects.api";
+import { deleteProject } from "../apis/projects.api";
+import { Project, Priority, Status } from "../types/Project";
+import { newUTCDatetime } from "../test-utils/utils";
 import { MemoryRouter } from "react-router-dom";
 
 jest.mock("../../apis/projects.api");

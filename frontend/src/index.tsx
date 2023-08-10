@@ -4,14 +4,14 @@ import reportWebVitals from "./reportWebVitals";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ErrorPage from "./pages/Error";
 import Root from "./routes/root";
-import ManageTasks from "./components/tasks/ManageTasks";
+import ManageTasks from "./pages/ManageTasks";
 import {
   Link as RouterLink,
   LinkProps as RouterLinkProps,
 } from "react-router-dom";
 import { LinkProps } from "@mui/material/Link";
 import { createTheme } from "@mui/material";
-import ManageProjects from "./components/projects/ManageProjects";
+import ManageProjects from "./pages/ManageProjects";
 
 const LinkBehavior = React.forwardRef<
   HTMLAnchorElement,
@@ -50,6 +50,10 @@ const router = createBrowserRouter([
       {
         path: "projects",
         element: <ManageProjects />,
+      },
+      {
+        path: "projects/new",
+        element: <ManageProjects createNew={true} />,
       },
       {
         path: "projects/:projectId/tasks",

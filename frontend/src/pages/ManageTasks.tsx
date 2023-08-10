@@ -1,14 +1,14 @@
 import { Button } from "@mui/material";
 import { useState, useEffect } from "react";
-import TaskForm from "./TaskForm";
-import SlideOver from "../shared/SlideOver";
-import { Task } from "../../types/Task";
-import ConfirmDeleteModal from "../shared/ConfirmDelete";
-import TasksTable from "./TasksTable";
-import { deleteTask } from "../../apis/tasks.api";
-import ErrorToast from "../shared/ErrorToast";
-import { getProjectTasks } from "../../apis/projects.api";
-import Loading from "../shared/Loading";
+import TaskForm from "../components/tasks/TaskForm";
+import SlideOver from "../components/shared/SlideOver";
+import { Task } from "../types/Task";
+import ConfirmDeleteModal from "../components/shared/ConfirmDelete";
+import TasksTable from "../components/tasks/TasksTable";
+import { deleteTask } from "../apis/tasks.api";
+import ErrorToast from "../components/shared/ErrorToast";
+import { getProjectTasks } from "../apis/projects.api";
+import Loading from "../components/shared/Loading";
 import { useParams } from "react-router-dom";
 
 interface ManageTasksParams extends Record<string, string | undefined> {
