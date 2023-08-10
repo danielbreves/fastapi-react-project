@@ -1,5 +1,8 @@
 # fastapi-react-project
 
+<img width="1189" alt="Screenshot 2023-08-10 at 10 42 14 am" src="https://github.com/danielbreves/fastapi-react-project/assets/2517811/27343124-3063-4229-aa4b-80aca9d35ea6">
+
+
 ## Features
 
 - **FastAPI** with Python 3.10
