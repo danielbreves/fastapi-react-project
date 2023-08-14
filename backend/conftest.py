@@ -8,7 +8,7 @@ import typing as t
 from app.core import config, security
 from app.db.session import Base, get_db
 from app.domains.users.db import user_entity
-from app.main import app
+from app.fastapi_app import app
 from app.domains.users.db.user_repository import get_user_by_email
 import debugpy
 
