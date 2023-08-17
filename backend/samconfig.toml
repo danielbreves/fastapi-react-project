@@ -9,6 +9,7 @@ stack_name = "fastapi-backend"
 [default.build.parameters]
 cached = true
 parallel = true
+region = "ap-southeast-2"
 
 [default.validate.parameters]
 lint = true

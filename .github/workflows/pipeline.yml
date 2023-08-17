@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: ["terraform"]
 
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 # These permissions are needed to interact with GitHub's OIDC Token endpoint.
 jobs:
   build:
@@ -33,7 +37,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Build inside Docker containers
-      - run: sam build --use-container
-      # Prevent prompts and failure when the stack is unchanged
-      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --image-repository ${{ vars.AWS_ECR_REPO }} --stack-name fastapi-backend-lambda
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        run: curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Poetry install
+        run: poetry install
+
+      - name: Poetry export
+        run: poetry export -f requirements.txt --without-hashes > requirements.txt
+
+      - run: >
+          sam build --use-container
+
+      - name: sam deploy
+        # Prevent prompts and failure when the stack is unchanged
+        run: >
+          sam deploy
+          --no-confirm-changeset
+          --no-fail-on-empty-changeset
+          --stack-name fastapi-backend-lambda
+          --parameter-overrides "SecretKeyArn=${{ vars.SECRET_ARN }} DBSecretArn=${{ vars.DB_SECRET_ARN }} DBEndpoint=${{ vars.DB_ENDPOINT }}"
+          --on-failure DELETE

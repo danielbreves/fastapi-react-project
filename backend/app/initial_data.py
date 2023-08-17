@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from random import choice
-from app.db.session import SessionLocal
+from app.db.session import get_session_local
 from datetime import date
 from app.core import config
 from app.domains.users.db.user_repository import create_user, get_user_by_email
@@ -76,7 +76,7 @@ tasks = [
 
 
 def init() -> None:
-    db = SessionLocal()
+    db = get_session_local()
 
     admin_email = config.TEST_USERNAME
     admin_password = config.TEST_PASSWORD

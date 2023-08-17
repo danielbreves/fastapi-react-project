@@ -24,15 +24,17 @@ passlib = "1.7.4"
 sqlalchemy-utils = "0.41.1"
 python-multipart = "0.0.5"
 pyjwt = "1.7.1"
-python-dotenv = "1.0.0"
-psycopg2-binary = "^2.9.7"
 mangum = "^0.17.0"
+aws-psycopg2 = "^1.3.8"
+python-dotenv = "1.0.0"
+aws-secretsmanager-caching = "^1.1.1.5"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 uvicorn = "0.23.2"
 pytest = "^7.1.3"
 ipython = "^7.31.1"
 debugpy = "^1.6.7"
+cfn-lint = "^0.79.7"
 
 [build-system]
 requires = ["poetry-core"]

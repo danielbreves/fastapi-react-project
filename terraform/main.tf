@@ -49,11 +49,13 @@ resource "aws_ecr_lifecycle_policy" "ecr_repository_policy" {
 
 resource "aws_db_instance" "fastapi-db" {
   allocated_storage           = 5
-  db_name                     = "fastapi-db"
+  db_name                     = "fastapidb"
   engine                      = "postgres"
   engine_version              = "15.3"
   instance_class              = "db.t3.micro"
   manage_master_user_password = true
   username                    = "postgres"
   parameter_group_name        = "default.postgres15"
+  skip_final_snapshot         = true
+  # final_snapshot_identifier   = "final-snapshot"
 }

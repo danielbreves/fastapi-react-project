@@ -18,7 +18,7 @@ async def get_current_user(
     )
     try:
         payload = jwt.decode(
-            token, security.SECRET_KEY, algorithms=[security.ALGORITHM]
+            token, security.get_secret_key(), algorithms=[security.ALGORITHM]
         )
         email: str = payload.get("sub")
         if email is None:
@@ -28,6 +28,10 @@ async def get_current_user(
             email=email, permissions=permissions)
     except PyJWTError:
         raise credentials_exception
+
+    if token_data is None or token_data.email is None:
+        raise credentials_exception
+
     user = get_user_by_email(db, token_data.email)
     if user is None:
         raise credentials_exception

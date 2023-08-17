@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
   fastapi-backend
@@ -10,10 +10,26 @@ Globals:
   Function:
     Timeout: 3
     MemorySize: 128
-
     Tracing: Active
   Api:
     TracingEnabled: true
+Parameters:
+  SecretKeyArn:
+    Type: String
+    Default: example
+    Description: ARN for the secret in SM
+  DBSecretArn:
+    Type: String
+    Default: example
+    Description: ARN for the DB pwd in SM
+  DBEndpoint:
+    Type: String
+    Default: example
+    Description: DB host:port
+  DBName:
+    Type: String
+    Default: fastapi-db
+    Description: DB name
 Resources:
   FastApiFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -21,19 +37,87 @@ Resources:
       FunctionName: FastApiBackend
       Description: >
         Lambda function running a FastApiBackend
-      PackageType: Image
+      PackageType: Zip
+      Handler: app.lambda_handler.handler
+      Runtime: python3.10
       Timeout: 300
+      Environment:
+        Variables:
+          CORS_ORIGINS: ""
+          DB_SECRET_ARN: !Ref DBSecretArn
+          DB_ENDPOINT: !Ref DBEndpoint
+          DB_NAME: !Ref DBName
+      Role: !GetAtt FastApiBackendRole.Arn
       Events:
         HttpApiEvent:
           Type: HttpApi
           Properties:
+            ApiId: !Ref HttpApi
             Path: /{proxy+}
             Method: ANY
-      Architectures: 
-      - x86_64 # GitHub Actions requires this: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
-    Metadata:
-      Dockerfile: lambda.Dockerfile
-      DockerContext: .
+      Architectures:
+        - x86_64 # GitHub Actions requires this: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+      Tags:
+        Name: !Sub "${AWS::StackName}-Function"
+        Stack: !Sub "${AWS::StackName}"
+
+  # API Gateway endpoint
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      FailOnWarnings: True
+      AccessLogSettings:
+        DestinationArn: !GetAtt ApiAccessLogs.Arn
+        Format: '{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","routeKey":"$context.routeKey", "status":"$context.status","protocol":"$context.protocol", "integrationStatus": $context.integrationStatus, "integrationLatency": $context.integrationLatency, "responseLength":"$context.responseLength" }'
+      Tags:
+        Name: !Sub "${AWS::StackName}-API"
+        Stack: !Sub "${AWS::StackName}"
+
+  # API Gateway access logs group with retention period
+  ApiAccessLogs:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/${AWS::StackName}/APIAccessLogs"
+      Tags:
+        - Key: Stack
+          Value: !Sub "${AWS::StackName}"
+
+  # Lambda execution role
+  FastApiBackendRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Description: FastApiBackend Lambda execution role
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: FastApiBackendSecretsManagerPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                Resource: !Ref SecretKeyArn
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                Resource: !Ref DBSecretArn
+      Tags:
+        - Key: Stack
+          Value: !Sub "${AWS::StackName}"
 
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
@@ -42,22 +126,21 @@ Resources:
         Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
       ResourceQuery:
         Type: CLOUDFORMATION_STACK_1_0
+
   ApplicationInsightsMonitoring:
     Type: AWS::ApplicationInsights::Application
     Properties:
       ResourceGroupName:
         Ref: ApplicationResourceGroup
-      AutoConfigurationEnabled: 'true'
+      AutoConfigurationEnabled: "true"
+
 Outputs:
   # ServerlessHttpApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   FastApiFunctionUrl:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
   FastApiFunctionArn:
     Description: FastApi Lambda Function ARN
     Value: !GetAtt FastApiFunction.Arn
-  FastApiFunctionIamRole:
-    Description: Implicit IAM Role created for FastApi function
-    Value: !GetAtt FastApiFunctionRole.Arn

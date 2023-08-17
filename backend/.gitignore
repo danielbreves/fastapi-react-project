@@ -166,3 +166,6 @@ cython_debug/
 
 # Ignore build folder
 .aws-sam/
+
+# dependencies are managed by Poetry and exported on build
+requirements.txt

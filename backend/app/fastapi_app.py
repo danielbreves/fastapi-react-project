@@ -2,7 +2,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import celery_tasks
 from app.core.celery_app import celery_app
 from app.domains.auth.auth import get_current_active_user
-from app.db.session import SessionLocal
+from app.db.session import get_session_local
 from app.core import config
 from app.domains.tasks.api.api_v1.routers.tasks import tasks_router
 from app.domains.tasks.api.api_v1.routers.projects import projects_router
@@ -29,7 +29,7 @@ app.add_middleware(
 
 @app.middleware("http")
 async def db_session_middleware(request: Request, call_next):
-    request.state.db = SessionLocal()
+    request.state.db = get_session_local()
     response = await call_next(request)
     request.state.db.close()
     return response
