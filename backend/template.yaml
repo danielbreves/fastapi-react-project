@@ -18,6 +18,18 @@ Parameters:
     Type: String
     Default: example
     Description: ARN for the secret in SM
+  LambdaSecurityGroupId:
+    Type: String
+    Default: example
+    Description: Security group id for the lambda
+  LambdaSubnet1Id:
+    Type: String
+    Default: example
+    Description: Lambda subnet 1 id
+  LambdaSubnet2Id:
+    Type: String
+    Default: example
+    Description: Lambda subnet 2 id
   DBSecretArn:
     Type: String
     Default: example
@@ -48,6 +60,12 @@ Resources:
           DB_ENDPOINT: !Ref DBEndpoint
           DB_NAME: !Ref DBName
       Role: !GetAtt FastApiBackendRole.Arn
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaVpcSecurityGroupId
+        SubnetIds:
+          - !Ref LambdaSubnet1Id
+          - !Ref LambdaSubnet2Id
       Events:
         HttpApiEvent:
           Type: HttpApi
