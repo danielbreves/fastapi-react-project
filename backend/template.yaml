@@ -62,7 +62,7 @@ Resources:
       Role: !GetAtt FastApiBackendRole.Arn
       VpcConfig:
         SecurityGroupIds:
-          - !Ref LambdaVpcSecurityGroupId
+          - !Ref LambdaSecurityGroupId
         SubnetIds:
           - !Ref LambdaSubnet1Id
           - !Ref LambdaSubnet2Id

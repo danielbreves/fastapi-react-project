@@ -35,11 +35,20 @@ resource "aws_vpc" "backend_vpc" {
   cidr_block = var.vpc_cidr
 }
 
+resource "aws_subnet" "bastion_subnet" {
+  vpc_id     = aws_vpc.backend_vpc.id
+  cidr_block = var.bastion_cidr
+  availability_zone = var.bastion_az
+    tags = {
+    Name = "bastion-subnet-1"
+  }
+}
+
 resource "aws_subnet" "db_subnet" {
   count             = length(var.db_cidr)
   vpc_id            = aws_vpc.backend_vpc.id
   cidr_block        = element(var.db_cidr, count.index)
-  availability_zone = element(var.db_azs, count.index)
+  availability_zone = element(var.db_azs, count.index) # 1 subnet per AZ
   tags = {
     Name = "db-subnet-${count.index + 1}"
   }
@@ -49,10 +58,14 @@ resource "aws_subnet" "lambda_subnet" {
   count             = length(var.lambda_cidr)
   vpc_id            = aws_vpc.backend_vpc.id
   cidr_block        = element(var.lambda_cidr, count.index)
-  availability_zone = element(var.lambda_azs, count.index)
+  availability_zone = element(var.lambda_azs, count.index) # 1 subnet per AZ
   tags = {
     Name = "lambda-subnet-${count.index + 1}"
   }
+}
+
+resource "aws_security_group" "bastion_sg" {
+  vpc_id = aws_vpc.backend_vpc.id
 }
 
 resource "aws_security_group" "db_sg" {
@@ -61,6 +74,32 @@ resource "aws_security_group" "db_sg" {
 
 resource "aws_security_group" "lambda_sg" {
   vpc_id = aws_vpc.backend_vpc.id
+}
+
+################################################################################
+# Bastion Host
+################################################################################
+
+data "aws_ami" "amzn_linux_2023_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-2023.*-x86_64"]
+  }
+}
+
+resource "aws_instance" "bastion_host" {
+  ami           = data.aws_ami.amzn_linux_2023_ami
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.bastion_subnet.id
+
+  security_groups = [aws_security_group.bastion_sg.id]
+
+  tags = {
+    Name = "BastionHost"
+  }
 }
 
 ################################################################################
