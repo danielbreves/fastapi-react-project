@@ -10,6 +10,10 @@ concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PYTHON_VERSION: "3.10"
+  POETRY_VERSION: "1.5.1"
+
 # These permissions are needed to interact with GitHub's OIDC Token endpoint.
 jobs:
   build:
@@ -37,15 +41,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Cache Poetry binary - Python ${{ env.PYTHON_VERSION }}
+        id: cache-bin-poetry
+        uses: actions/cache@v3
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MIN: "1"
+        with:
+          path: |
+            /opt/pipx/venvs/poetry
+            /opt/pipx_bin/poetry
+          # This step caches the poetry installation, so make sure it's keyed on the poetry version as well. From: https://github.com/langchain-ai/langchain/blob/b379c5f9c89199370d9175ce6ee34d469567e533/.github/workflows/_lint.yml#L12
+          key: bin-poetry-${{ runner.os }}-${{ runner.arch }}-py-${{ env.PYTHON_VERSION }}-${{ env.POETRY_VERSION }}
+
+      - name: Install poetry
+        if: steps.cache-bin-poetry.outputs.cache-hit != 'true'
+        shell: bash
+        run: pipx install "poetry==$POETRY_VERSION" --python "python$PYTHON_VERSION" --verbose
+
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'poetry'
 
-      - name: Install Poetry
-        run: curl -sSL https://install.python-poetry.org | python3 -
-
-      - name: Poetry install
-        run: poetry install
+      - run: poetry install
 
       - name: Poetry export
         run: poetry export -f requirements.txt --without-hashes > requirements.txt

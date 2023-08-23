@@ -115,7 +115,9 @@ resource "aws_db_subnet_group" "db_subnet_group" {
   subnet_ids = [aws_subnet.db_subnet[0].id, aws_subnet.db_subnet[1].id]
 }
 
+# TODO: Configure backups
 resource "aws_db_instance" "fastapi_db" {
+  identifier                  = "fastapi-rds-instance"
   allocated_storage           = 5
   db_name                     = "fastapidb"
   engine                      = "postgres"
