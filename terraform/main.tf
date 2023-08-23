@@ -12,6 +12,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.12"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.5.1"
+    }
   }
 
   required_version = ">= 1.2.0"
@@ -36,10 +40,10 @@ resource "aws_vpc" "backend_vpc" {
 }
 
 resource "aws_subnet" "bastion_subnet" {
-  vpc_id     = aws_vpc.backend_vpc.id
-  cidr_block = var.bastion_cidr
+  vpc_id            = aws_vpc.backend_vpc.id
+  cidr_block        = var.bastion_cidr
   availability_zone = var.bastion_az
-    tags = {
+  tags = {
     Name = "bastion-subnet-1"
   }
 }
@@ -91,7 +95,7 @@ data "aws_ami" "amzn_linux_2023_ami" {
 }
 
 resource "aws_instance" "bastion_host" {
-  ami           = data.aws_ami.amzn_linux_2023_ami
+  ami           = data.aws_ami.amzn_linux_2023_ami.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.bastion_subnet.id
 
@@ -107,7 +111,7 @@ resource "aws_instance" "bastion_host" {
 ################################################################################
 
 resource "aws_db_subnet_group" "db_subnet_group" {
-  name       = "FastAPIDBSubnetGroup"
+  name       = "fastapi-db-subnet-group"
   subnet_ids = [aws_subnet.db_subnet[0].id, aws_subnet.db_subnet[1].id]
 }
 
@@ -138,20 +142,20 @@ resource "random_password" "db_proxy_password" {
 }
 
 resource "aws_secretsmanager_secret" "db_proxy_secret" {
-  name = "DBProxySecret"
+  name = "db-proxy-secret"
 }
 
 resource "aws_secretsmanager_secret_version" "db_version" {
   secret_id = aws_secretsmanager_secret.db_proxy_secret.id
   # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-proxy-setup.html#rds-proxy-secrets-arns
   secret_string = jsonencode({
-    "username"             = var.lambda_db_username
-    "password"             = random_password.db_proxy_password.result
+    "username" = var.lambda_db_username
+    "password" = random_password.db_proxy_password.result
   })
 }
 
 resource "aws_iam_role" "db_proxy_role" {
-  name = "DBProxyRole"
+  name = "db-proxy-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -167,14 +171,14 @@ resource "aws_iam_role" "db_proxy_role" {
 }
 
 resource "aws_iam_policy" "db_proxy_policy" {
-  name = "DBProxyPolicy"
+  name = "db-proxy-policy"
 
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Action = "secretsmanager:GetSecretValue",
-        Effect = "Allow",
+        Action   = "secretsmanager:GetSecretValue",
+        Effect   = "Allow",
         Resource = aws_secretsmanager_secret.db_proxy_secret.arn
       }
     ]
@@ -187,7 +191,7 @@ resource "aws_iam_role_policy_attachment" "db_proxy_role_policy_attachment" {
 }
 
 resource "aws_db_proxy" "db_proxy" {
-  name                = "DBProxy"
+  name                = "db-proxy"
   debug_logging       = true
   idle_client_timeout = 1800
   require_tls         = true
@@ -195,7 +199,7 @@ resource "aws_db_proxy" "db_proxy" {
   engine_family       = "POSTGRESQL"
 
   vpc_security_group_ids = [aws_security_group.db_sg.id]
-  vpc_subnet_ids         = [aws_subnet.db_subnet.id]
+  vpc_subnet_ids         = [aws_subnet.lambda_subnet[0].id, aws_subnet.lambda_subnet[1].id]
 
   auth {
     auth_scheme = "SECRETS"
