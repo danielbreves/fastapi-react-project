@@ -37,6 +37,12 @@ locals {
 
 resource "aws_vpc" "backend_vpc" {
   cidr_block = var.vpc_cidr
+  enable_dns_support = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "fastapi-backend-vpc"
+  }
 }
 
 resource "aws_subnet" "bastion_subnet" {
@@ -69,15 +75,33 @@ resource "aws_subnet" "lambda_subnet" {
 }
 
 resource "aws_security_group" "bastion_sg" {
-  vpc_id = aws_vpc.backend_vpc.id
+  name_prefix = "bastion-sg"
+  vpc_id      = aws_vpc.backend_vpc.id
+
+  lifecycle {
+    # https://github.com/hashicorp/terraform/issues/8617
+    create_before_destroy = true
+  }
 }
 
 resource "aws_security_group" "db_sg" {
-  vpc_id = aws_vpc.backend_vpc.id
+  name_prefix = "db-sg"
+  vpc_id      = aws_vpc.backend_vpc.id
+
+  lifecycle {
+    # https://github.com/hashicorp/terraform/issues/8617
+    create_before_destroy = true
+  }
 }
 
 resource "aws_security_group" "lambda_sg" {
-  vpc_id = aws_vpc.backend_vpc.id
+  name_prefix = "lambda-sg"
+  vpc_id      = aws_vpc.backend_vpc.id
+
+  lifecycle {
+    # https://github.com/hashicorp/terraform/issues/8617
+    create_before_destroy = true
+  }
 }
 
 ################################################################################
@@ -107,7 +131,8 @@ resource "aws_instance" "bastion_host" {
   }
 }
 
-resource "aws_iam_role" "ec2_ssm_role" {
+# See https://repost.aws/knowledge-center/ec2-systems-manager-vpc-endpoints
+resource "aws_iam_role" "bastion_ssm_role" {
   name = "ec2-bastion-ssm-role"
 
   assume_role_policy = jsonencode({
@@ -115,6 +140,7 @@ resource "aws_iam_role" "ec2_ssm_role" {
     Statement = [{
       Action = "sts:AssumeRole"
       Effect = "Allow"
+      Sid    = ""
       Principal = {
         Service = "ec2.amazonaws.com"
       }
@@ -123,13 +149,77 @@ resource "aws_iam_role" "ec2_ssm_role" {
 }
 
 resource "aws_iam_instance_profile" "ec2_ssm_instance_profile" {
-  name = "ec2-bastion-ssm-profile"
-  role = aws_iam_role.ec2_ssm_role.name
+  name_prefix = "ec2-bastion-ssm-profile"
+  role        = aws_iam_role.bastion_ssm_role.name
 }
 
 resource "aws_iam_role_policy_attachment" "ec2_ssm_policy_attachment" {
-  role       = aws_iam_role.ec2_ssm_role.name
+  role       = aws_iam_role.bastion_ssm_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+# https://docs.aws.amazon.com/systems-manager/latest/userguide/ssm-agent-minimum-s3-permissions.html
+resource "aws_iam_policy" "bastion_ssm_s3_policy" {
+  name = "bastion-ssm-s3-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "s3:GetObject"
+      Effect = "Allow"
+      Resource = [
+        "arn:aws:s3:::aws-ssm-${var.aws_region}/*",
+        "arn:aws:s3:::aws-windows-downloads-${var.aws_region}/*",
+        "arn:aws:s3:::amazon-ssm-${var.aws_region}/*",
+        "arn:aws:s3:::amazon-ssm-packages-${var.aws_region}/*",
+        "arn:aws:s3:::${var.aws_region}-birdwatcher-prod/*",
+        "arn:aws:s3:::aws-ssm-distributor-file-${var.aws_region}/*",
+        "arn:aws:s3:::aws-ssm-document-attachments-${var.aws_region}/*",
+        "arn:aws:s3:::patch-baseline-snapshot-${var.aws_region}/*"
+      ]
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "bastion_host_ssm_s3" {
+  role       = aws_iam_role.bastion_ssm_role.name
+  policy_arn = aws_iam_policy.bastion_ssm_s3_policy.arn
+}
+
+resource "aws_vpc_endpoint" "ssm_endpoints" {
+  for_each            = toset(["ssmmessages", "ec2messages", "ssm"])
+  service_name        = "com.amazonaws.${var.aws_region}.${each.key}"
+  vpc_id              = aws_vpc.backend_vpc.id
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [aws_subnet.bastion_subnet.id]
+  security_group_ids  = [aws_security_group.vpc_endpoints_sg.id]
+  private_dns_enabled = true
+}
+
+resource "aws_security_group" "vpc_endpoints_sg" {
+  name_prefix = "vpc-endpoints-ssm-sg"
+  vpc_id      = aws_vpc.backend_vpc.id
+
+  lifecycle {
+    # https://github.com/hashicorp/terraform/issues/8617
+    create_before_destroy = true
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "vpc_endpoints_ingress_rule" {
+  security_group_id            = aws_security_group.vpc_endpoints_sg.id
+  referenced_security_group_id = aws_security_group.bastion_sg.id
+  from_port                    = 443
+  ip_protocol                  = "tcp"
+  to_port                      = 443
+}
+
+resource "aws_vpc_security_group_egress_rule" "bastion_host_egress_rule" {
+  security_group_id            = aws_security_group.bastion_sg.id
+  referenced_security_group_id = aws_security_group.vpc_endpoints_sg.id
+  from_port                    = 443
+  ip_protocol                  = "tcp"
+  to_port                      = 443
 }
 
 ################################################################################
@@ -143,7 +233,6 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 
 # TODO: Configure backups
 resource "aws_db_instance" "fastapi_db" {
-  identifier                  = "fastapi-rds-instance"
   allocated_storage           = 5
   db_name                     = "fastapidb"
   engine                      = "postgres"
@@ -158,7 +247,11 @@ resource "aws_db_instance" "fastapi_db" {
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.id
 
-  multi_az = true # Enable multi-AZ deployment for high availability
+  multi_az = true
+
+  tags = {
+    Name = "fastapi-rds-instance"
+  }
 }
 
 ################################################################################
@@ -201,18 +294,18 @@ resource "aws_iam_policy" "db_proxy_policy" {
   name = "db-proxy-policy"
 
   policy = jsonencode({
-    Version = "2012-10-17",
+    Version = "2012-10-17"
     Statement = [{
-      Action   = "secretsmanager:GetSecretValue",
-      Effect   = "Allow",
+      Action   = "secretsmanager:GetSecretValue"
+      Effect   = "Allow"
       Resource = aws_secretsmanager_secret.db_proxy_secret.arn
     }]
   })
 }
 
 resource "aws_iam_role_policy_attachment" "db_proxy_role_policy_attachment" {
-  policy_arn = aws_iam_policy.db_proxy_policy.arn
   role       = aws_iam_role.db_proxy_role.name
+  policy_arn = aws_iam_policy.db_proxy_policy.arn
 }
 
 resource "aws_db_proxy" "db_proxy" {
@@ -236,14 +329,14 @@ resource "aws_db_proxy" "db_proxy" {
   depends_on = [aws_cloudwatch_log_group.db_proxy_log_group]
 }
 
-resource "aws_db_proxy_default_target_group" "default" {
+resource "aws_db_proxy_default_target_group" "db_proxy_target_group" {
   db_proxy_name = aws_db_proxy.db_proxy.name
 }
 
-resource "aws_db_proxy_target" "example" {
+resource "aws_db_proxy_target" "db_proxy_target" {
   db_instance_identifier = aws_db_instance.fastapi_db.identifier
   db_proxy_name          = aws_db_proxy.db_proxy.name
-  target_group_name      = aws_db_proxy_default_target_group.default.name
+  target_group_name      = aws_db_proxy_default_target_group.db_proxy_target_group.name
 }
 
 resource "aws_cloudwatch_log_group" "db_proxy_log_group" {
