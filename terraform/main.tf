@@ -36,12 +36,22 @@ locals {
 ################################################################################
 
 resource "aws_vpc" "backend_vpc" {
-  cidr_block = var.vpc_cidr
-  enable_dns_support = true
+  cidr_block           = var.vpc_cidr
+  enable_dns_support   = true
   enable_dns_hostnames = true
 
   tags = {
     Name = "fastapi-backend-vpc"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id                  = aws_vpc.backend_vpc.id
+  cidr_block              = var.public_cidr
+  availability_zone       = var.bastion_az
+  map_public_ip_on_launch = true
+  tags = {
+    Name = "public-subnet"
   }
 }
 
@@ -214,12 +224,51 @@ resource "aws_vpc_security_group_ingress_rule" "vpc_endpoints_ingress_rule" {
   to_port                      = 443
 }
 
+# Allow access to the internet from the bastion host
 resource "aws_vpc_security_group_egress_rule" "bastion_host_egress_rule" {
   security_group_id            = aws_security_group.bastion_sg.id
-  referenced_security_group_id = aws_security_group.vpc_endpoints_sg.id
-  from_port                    = 443
-  ip_protocol                  = "tcp"
-  to_port                      = 443
+  ip_protocol                  = "-1"
+  cidr_ipv4                    = "0.0.0.0/0"
+}
+
+resource "aws_internet_gateway" "backend_vpc_igw" {
+  vpc_id = aws_vpc.backend_vpc.id
+}
+
+resource "aws_eip" "bastion_nat_eip" {}
+
+resource "aws_nat_gateway" "bastion_nat_gwy" {
+  subnet_id     = aws_subnet.public_subnet.id
+  allocation_id = aws_eip.bastion_nat_eip.id
+  depends_on    = [aws_internet_gateway.backend_vpc_igw, aws_eip.bastion_nat_eip]
+}
+
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.backend_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.backend_vpc_igw.id
+  }
+}
+
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.backend_vpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.bastion_nat_gwy.id
+  }
+}
+
+resource "aws_route_table_association" "public" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+resource "aws_route_table_association" "private" {
+  subnet_id      = aws_subnet.bastion_subnet.id
+  route_table_id = aws_route_table.private_rt.id
 }
 
 ################################################################################
