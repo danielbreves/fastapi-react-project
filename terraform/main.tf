@@ -285,7 +285,7 @@ resource "aws_db_instance" "fastapi_db" {
   allocated_storage           = 5
   db_name                     = "fastapidb"
   engine                      = "postgres"
-  engine_version              = "15.3"
+  engine_version              = "11.5"
   instance_class              = "db.t3.micro"
   manage_master_user_password = true
   username                    = "postgres"
