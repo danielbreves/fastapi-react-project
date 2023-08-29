@@ -104,6 +104,16 @@ resource "aws_security_group" "db_sg" {
   }
 }
 
+resource "aws_security_group" "db_proxy_sg" {
+  name_prefix = "db-proxy-sg"
+  vpc_id      = aws_vpc.backend_vpc.id
+
+  lifecycle {
+    # https://github.com/hashicorp/terraform/issues/8617
+    create_before_destroy = true
+  }
+}
+
 resource "aws_security_group" "lambda_sg" {
   name_prefix = "lambda-sg"
   vpc_id      = aws_vpc.backend_vpc.id
@@ -112,6 +122,42 @@ resource "aws_security_group" "lambda_sg" {
     # https://github.com/hashicorp/terraform/issues/8617
     create_before_destroy = true
   }
+}
+
+resource "aws_vpc_security_group_egress_rule" "lambda_egress_rule" {
+  security_group_id = aws_security_group.lambda_sg.id
+  ip_protocol       = "-1"
+  cidr_ipv4         = "0.0.0.0/0"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "db_ingress_rule" {
+  security_group_id            = aws_security_group.db_sg.id
+  referenced_security_group_id = aws_security_group.db_proxy_sg.id
+  from_port                    = 5432
+  ip_protocol                  = "tcp"
+  to_port                      = 5432
+}
+
+resource "aws_vpc_security_group_ingress_rule" "db_proxy_bastion_ingress_rule" {
+  security_group_id            = aws_security_group.db_proxy_sg.id
+  referenced_security_group_id = aws_security_group.bastion_sg.id
+  from_port                    = 5432
+  ip_protocol                  = "tcp"
+  to_port                      = 5432
+}
+
+resource "aws_vpc_security_group_ingress_rule" "db_proxy_lambda_ingress_rule" {
+  security_group_id            = aws_security_group.db_proxy_sg.id
+  referenced_security_group_id = aws_security_group.lambda_sg.id
+  from_port                    = 5432
+  ip_protocol                  = "tcp"
+  to_port                      = 5432
+}
+
+resource "aws_vpc_security_group_egress_rule" "db_proxy_egress_rule" {
+  security_group_id = aws_security_group.db_proxy_sg.id
+  ip_protocol       = "-1"
+  cidr_ipv4         = "0.0.0.0/0"
 }
 
 ################################################################################
@@ -226,9 +272,9 @@ resource "aws_vpc_security_group_ingress_rule" "vpc_endpoints_ingress_rule" {
 
 # Allow access to the internet from the bastion host
 resource "aws_vpc_security_group_egress_rule" "bastion_host_egress_rule" {
-  security_group_id            = aws_security_group.bastion_sg.id
-  ip_protocol                  = "-1"
-  cidr_ipv4                    = "0.0.0.0/0"
+  security_group_id = aws_security_group.bastion_sg.id
+  ip_protocol       = "-1"
+  cidr_ipv4         = "0.0.0.0/0"
 }
 
 resource "aws_internet_gateway" "backend_vpc_igw" {
@@ -285,7 +331,7 @@ resource "aws_db_instance" "fastapi_db" {
   allocated_storage           = 5
   db_name                     = "fastapidb"
   engine                      = "postgres"
-  engine_version              = "11.5"
+  engine_version              = "15.3"
   instance_class              = "db.t3.micro"
   manage_master_user_password = true
   username                    = "postgres"
@@ -296,7 +342,7 @@ resource "aws_db_instance" "fastapi_db" {
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.id
 
-  multi_az = true
+  # multi_az = true
 
   tags = {
     Name = "fastapi-rds-instance"
@@ -318,9 +364,14 @@ resource "aws_secretsmanager_secret" "db_proxy_secret" {
 resource "aws_secretsmanager_secret_version" "db_version" {
   secret_id = aws_secretsmanager_secret.db_proxy_secret.id
   # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-proxy-setup.html#rds-proxy-secrets-arns
+  # https://stackoverflow.com/a/68298965/4478917
   secret_string = jsonencode({
-    "username" = var.lambda_db_username
-    "password" = random_password.db_proxy_password.result
+    "username"             = var.lambda_db_username
+    "password"             = random_password.db_proxy_password.result
+    "engine"               = "postgres"
+    "host"                 = aws_db_instance.fastapi_db.address
+    "port"                 = 5432
+    "dbInstanceIdentifier" = aws_db_instance.fastapi_db.id
   })
 }
 
@@ -347,7 +398,10 @@ resource "aws_iam_policy" "db_proxy_policy" {
     Statement = [{
       Action   = "secretsmanager:GetSecretValue"
       Effect   = "Allow"
-      Resource = aws_secretsmanager_secret.db_proxy_secret.arn
+      Resource = [
+        aws_secretsmanager_secret.db_proxy_secret.arn,
+        aws_db_instance.fastapi_db.master_user_secret[0].secret_arn
+      ]
     }]
   })
 }
@@ -365,13 +419,20 @@ resource "aws_db_proxy" "db_proxy" {
   role_arn            = aws_iam_role.db_proxy_role.arn
   engine_family       = "POSTGRESQL"
 
-  vpc_security_group_ids = [aws_security_group.db_sg.id]
+  vpc_security_group_ids = [aws_security_group.db_proxy_sg.id]
   vpc_subnet_ids         = [aws_subnet.lambda_subnet[0].id, aws_subnet.lambda_subnet[1].id]
 
   auth {
     auth_scheme = "SECRETS"
-    description = "using secret manager"
-    iam_auth    = "DISABLED"
+    description = "RDS Proxy with IAM auth for master user"
+    iam_auth    = "REQUIRED"
+    secret_arn  = aws_db_instance.fastapi_db.master_user_secret[0].secret_arn
+  }
+
+  auth {
+    auth_scheme = "SECRETS"
+    description = "RDS Proxy with IAM auth for lambda"
+    iam_auth    = "REQUIRED"
     secret_arn  = aws_secretsmanager_secret.db_proxy_secret.arn
   }
 
