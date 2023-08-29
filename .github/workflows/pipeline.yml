@@ -1,10 +1,6 @@
 name: FastAPI CI/CD Pipeline
 
-on:
-  push:
-    branches: ["terraform"]
-  pull_request:
-    branches: ["terraform"]
+on: workflow_dispatch
 
 concurrency:
   group: ${{ github.ref }}
