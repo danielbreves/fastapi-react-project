@@ -6,7 +6,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from app.core import config
 
-from app.db.session import Base
+from app.db.session import Base, get_db_url
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -28,10 +28,6 @@ target_metadata = Base.metadata
 # ... etc.
 
 
-def get_url():
-    return config.DATABASE_URL
-
-
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
     This configures the context with just a URL
@@ -42,7 +38,7 @@ def run_migrations_offline():
     script output.
     """
     # url = config.get_main_option("sqlalchemy.url")
-    url = get_url()
+    url = get_db_url()
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -61,7 +57,7 @@ def run_migrations_online():
     """
     configuration = alembic_config.get_section(
         alembic_config.config_ini_section)
-    configuration["sqlalchemy.url"] = get_url()
+    configuration["sqlalchemy.url"] = get_db_url()
     connectable = engine_from_config(
         configuration,
         prefix="sqlalchemy.",

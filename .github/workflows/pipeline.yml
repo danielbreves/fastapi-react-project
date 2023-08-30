@@ -4,7 +4,7 @@ on:
   workflow_dispatch: {}
   push:
     branches:
-      - 'terraform'
+      - "terraform"
 
 concurrency:
   group: ${{ github.ref }}
@@ -61,15 +61,14 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'poetry'
+          cache: "poetry"
 
       - run: poetry install
 
       - name: Poetry export
         run: poetry export -f requirements.txt --without-hashes > requirements.txt
 
-      - run: >
-          sam build --use-container
+      - run: sam build --use-container
 
       - name: sam deploy
         # Prevent prompts and failure when the stack is unchanged
@@ -79,3 +78,6 @@ jobs:
           --no-fail-on-empty-changeset
           --stack-name fastapi-backend-lambda
           --parameter-overrides "LambdaSecurityGroupId=${{ vars.LAMBDA_SG_ID }} LambdaSubnet1Id=${{ vars.LAMBDA_SUBNET_1_ID }} LambdaSubnet2Id=${{ vars.LAMBDA_SUBNET_2_ID }} SecretKeyArn=${{ vars.SECRET_ARN }} DBSecretArn=${{ vars.DB_SECRET_ARN }} DBEndpoint=${{ vars.DB_ENDPOINT }}"
+
+      - name: Run migrations
+        run: sam remote invoke FastApiMigrationsFunction --stack-name fastapi-backend-lambda

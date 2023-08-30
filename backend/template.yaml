@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Transform: AWS::Serverless-2016-10-31
+Transform:
+  - AWS::LanguageExtensions # https://sodkiewiczm.medium.com/are-you-using-sam-deployments-there-is-a-chance-that-you-have-an-issue-that-you-are-not-aware-of-558aaf9454b5
+  - AWS::Serverless-2016-10-31
 Description: >
   fastapi-backend
 
@@ -52,7 +54,7 @@ Resources:
       PackageType: Zip
       Handler: app.lambda_handler.handler
       Runtime: python3.10
-      Timeout: 300
+      Timeout: 300 # 5 minutes
       Environment:
         Variables:
           CORS_ORIGINS: ""
@@ -77,6 +79,34 @@ Resources:
         - x86_64 # GitHub Actions requires this: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
       Tags:
         Name: !Sub "${AWS::StackName}-Function"
+        Stack: !Sub "${AWS::StackName}"
+
+  FastApiMigrationsFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      FunctionName: FastApiMigrations
+      Description: >
+        Lambda function to run alembic migrations
+      PackageType: Zip
+      Handler: app.migrate_handler.handler
+      Runtime: python3.10
+      Timeout: 900 # 15 minutes
+      Environment:
+        Variables:
+          DB_SECRET_ARN: !Ref DBSecretArn
+          DB_ENDPOINT: !Ref DBEndpoint
+          DB_NAME: !Ref DBName
+      Role: !GetAtt FastApiBackendRole.Arn
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroupId
+        SubnetIds:
+          - !Ref LambdaSubnet1Id
+          - !Ref LambdaSubnet2Id
+      Architectures:
+        - x86_64 # GitHub Actions requires this: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+      Tags:
+        Name: !Sub "${AWS::StackName}MigrationsFunction"
         Stack: !Sub "${AWS::StackName}"
 
   # API Gateway endpoint
