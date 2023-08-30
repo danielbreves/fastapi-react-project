@@ -281,12 +281,12 @@ resource "aws_internet_gateway" "backend_vpc_igw" {
   vpc_id = aws_vpc.backend_vpc.id
 }
 
-resource "aws_eip" "bastion_nat_eip" {}
+resource "aws_eip" "nat_eip" {}
 
-resource "aws_nat_gateway" "bastion_nat_gwy" {
+resource "aws_nat_gateway" "nat_gwy" {
   subnet_id     = aws_subnet.public_subnet.id
-  allocation_id = aws_eip.bastion_nat_eip.id
-  depends_on    = [aws_internet_gateway.backend_vpc_igw, aws_eip.bastion_nat_eip]
+  allocation_id = aws_eip.nat_eip.id
+  depends_on    = [aws_internet_gateway.backend_vpc_igw, aws_eip.nat_eip]
 }
 
 resource "aws_route_table" "public_rt" {
@@ -303,7 +303,7 @@ resource "aws_route_table" "private_rt" {
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.bastion_nat_gwy.id
+    nat_gateway_id = aws_nat_gateway.nat_gwy.id
   }
 }
 
@@ -312,8 +312,16 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public_rt.id
 }
 
-resource "aws_route_table_association" "private" {
+resource "aws_route_table_association" "bastion_private_rt_association" {
   subnet_id      = aws_subnet.bastion_subnet.id
+  route_table_id = aws_route_table.private_rt.id
+}
+
+# Allow lambda to access the internet: https://repost.aws/knowledge-center/internet-access-lambda-function
+# https://devops.stackexchange.com/questions/4944/placing-an-aws-lambda-in-a-public-subnet
+resource "aws_route_table_association" "lambda_private_rt_association" {
+  count = length(var.lambda_cidr)
+  subnet_id      = element(aws_subnet.lambda_subnet.*.id, count.index)
   route_table_id = aws_route_table.private_rt.id
 }
 
