@@ -77,7 +77,20 @@ jobs:
           --no-confirm-changeset
           --no-fail-on-empty-changeset
           --stack-name fastapi-backend-lambda
-          --parameter-overrides "LambdaSecurityGroupId=${{ vars.LAMBDA_SG_ID }} LambdaSubnet1Id=${{ vars.LAMBDA_SUBNET_1_ID }} LambdaSubnet2Id=${{ vars.LAMBDA_SUBNET_2_ID }} SecretKeyArn=${{ vars.SECRET_ARN }} DBSecretArn=${{ vars.DB_SECRET_ARN }} DBEndpoint=${{ vars.DB_ENDPOINT }}"
+          --parameter-overrides
+          "LambdaSecurityGroupId=${{ vars.LAMBDA_SG_ID }}
+          LambdaSubnet1Id=${{ vars.LAMBDA_SUBNET_1_ID }}
+          LambdaSubnet2Id=${{ vars.LAMBDA_SUBNET_2_ID }}
+          SecretKeyArn=${{ vars.SECRET_ARN }}
+          DBSecretArn=${{ vars.DB_SECRET_ARN }}
+          DBEndpoint=${{ vars.DB_ENDPOINT }}
+          DBName=fastapidb"
 
       - name: Run migrations
-        run: sam remote invoke FastApiMigrationsFunction --stack-name fastapi-backend-lambda
+        run: |
+          output=$(sam remote invoke FastApiMigrationsFunction --stack-name fastapi-backend-lambda 2>&1)
+          echo "$output"
+
+          if [[ $output == *"Error"* ]]; then
+            exit 1
+          fi

@@ -1,7 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Transform:
-  - AWS::LanguageExtensions # https://sodkiewiczm.medium.com/are-you-using-sam-deployments-there-is-a-chance-that-you-have-an-issue-that-you-are-not-aware-of-558aaf9454b5
-  - AWS::Serverless-2016-10-31
+Transform: AWS::Serverless-2016-10-31
 Description: >
   fastapi-backend
 
@@ -18,31 +16,24 @@ Globals:
 Parameters:
   SecretKeyArn:
     Type: String
-    Default: example
     Description: ARN for the secret in SM
   LambdaSecurityGroupId:
     Type: String
-    Default: example
     Description: Security group id for the lambda
   LambdaSubnet1Id:
     Type: String
-    Default: example
     Description: Lambda subnet 1 id
   LambdaSubnet2Id:
     Type: String
-    Default: example
     Description: Lambda subnet 2 id
   DBSecretArn:
     Type: String
-    Default: example
     Description: ARN for the DB pwd in SM
   DBEndpoint:
     Type: String
-    Default: example
     Description: DB host:port
   DBName:
     Type: String
-    Default: fastapidb
     Description: DB name
 Resources:
   FastApiFunction:
