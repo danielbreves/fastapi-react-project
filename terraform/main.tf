@@ -415,7 +415,7 @@ resource "aws_db_proxy" "db_proxy" {
   name                = "db-proxy"
   debug_logging       = true
   idle_client_timeout = 1800
-  require_tls         = true
+  # require_tls         = true
   role_arn            = aws_iam_role.db_proxy_role.arn
   engine_family       = "POSTGRESQL"
 
@@ -424,15 +424,13 @@ resource "aws_db_proxy" "db_proxy" {
 
   auth {
     auth_scheme = "SECRETS"
-    description = "RDS Proxy with IAM auth for master user"
-    iam_auth    = "REQUIRED"
+    iam_auth    = "DISABLED"
     secret_arn  = aws_db_instance.fastapi_db.master_user_secret[0].secret_arn
   }
 
   auth {
     auth_scheme = "SECRETS"
-    description = "RDS Proxy with IAM auth for lambda"
-    iam_auth    = "REQUIRED"
+    iam_auth    = "DISABLED"
     secret_arn  = aws_secretsmanager_secret.db_proxy_secret.arn
   }
 
