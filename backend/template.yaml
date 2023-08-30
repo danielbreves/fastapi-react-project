@@ -40,7 +40,7 @@ Parameters:
     Description: DB host:port
   DBName:
     Type: String
-    Default: fastapi-db
+    Default: fastapidb
     Description: DB name
 Resources:
   FastApiFunction:
